@@ -1,11 +1,11 @@
+import streamlit as st
+import google.generativeai as genai
 st.set_page_config(
     page_title="Comedy Crowd Sim",
     page_icon="🎤",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
-import streamlit as st
-import google.generativeai as genai
 
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤")
@@ -49,3 +49,4 @@ if st.button("Do the Bit"):
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
