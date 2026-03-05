@@ -26,6 +26,14 @@ CROWD_PRESETS = {
         "vibe": "Open Mic Comics",
         "desc": "Just 10 guys waiting for their turn to talk."
     }
+CROWD_PRESETS = {
+    "The College Gig": {"size": 25, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "TikTok attention spans."},
+    "The Biker Bar": {"size": 40, "age": "Gen X", "vibe": "Drunk/Rowdy", "desc": "Leather and zero patience."},
+    "The VFW Hall": {"size": 30, "age": "Boomer", "vibe": "Corporate/Cold", "desc": "Staring at you over a pitcher of light beer."},
+    "The Tech Mixer": {"size": 60, "age": "Millennial", "vibe": "Corporate/Cold", "desc": "Everyone is checking their Slack notifications."},
+    "The 'Last Resort'": {"size": 5, "age": "Mixed", "vibe": "Drunk/Rowdy", "desc": "Just three guys and a bartender who hates you."},
+    "The Woke Workshop": {"size": 20, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "Waiting for you to say something problematic."},
+}
 }
 st.set_page_config(
     page_title="Comedy Crowd Sim",
@@ -59,21 +67,25 @@ st.markdown("### *Test your set before the robots take over.*")
 with st.sidebar:
     st.header("Step 1: Pick Your Room")
     
-    # Select a preset
-    preset_name = st.selectbox("Choose a Preset", list(CROWD_PRESETS.keys()))
-    room = CROWD_PRESETS[preset_name]
+    with st.sidebar:
+    st.header("Step 1: The Crowd Base")
+    base_room = st.selectbox("Base Crowd", list(CROWD_PRESETS.keys()))
     
-    st.info(f"Current Vibe: {room['desc']}")
+    st.header("Step 2: The Modifier")
+    # This adds the 'Combination' element
+    modifier = st.selectbox("Current State", [
+        "Normal", 
+        "Hostile/Heckling", 
+        "Distracted by Sports on TV", 
+        "High/Edibles Kicking In", 
+        "Actually Liking You"
+    ])
+
+    # Dynamic Description Logic
+    room = CROWD_PRESETS[base_room]
+    final_desc = f"{room['desc']} + {modifier} Mode"
     
-    st.divider()
-    st.header("Fine-Tune Settings")
-    
-    # Use the preset values as 'defaults' for the sliders/selects
-    size = st.slider("Crowd Size", 5, 500, room['size'])
-    age = st.selectbox("Age Group", ["Gen Z", "Millennial", "Gen X", "Boomer", "Mixed"], 
-                       index=["Gen Z", "Millennial", "Gen X", "Boomer", "Mixed"].index(room['age']))
-    vibe = st.selectbox("Room Vibe", ["Encouraging but Naive", "Drunk/Rowdy", "Corporate/Cold", "Open Mic Comics"],
-                        index=["Encouraging but Naive", "Drunk/Rowdy", "Corporate/Cold", "Open Mic Comics"].index(room['vibe']))
+    st.success(f"Targeting: {final_desc}")
 
 bit_text = st.text_area("Paste your bit here:", placeholder="I've always been a grumpy old man...", height=200)
 
@@ -81,10 +93,16 @@ if st.button("Do the Bit"):
     if bit_text:
         model = genai.GenerativeModel('gemini-1.5-flash')
         full_query = f"""
-Analyze this set for: {preset_name}.
-Details: {size} people, mostly {age}, feeling {vibe}.
-The specific room description is: {room['desc']}
-Bit: {bit_text}
+SCENARIO: You are simulating a comedy club crowd.
+BASE CROWD: {base_room} ({room['age']}, {room['vibe']})
+MODIFIER: {modifier}
+CONTEXT: {room['desc']}
+
+BIT TO EVALUATE: 
+{bit_text}
+
+AI TASK: Respond as if the modifier is fighting the base crowd. 
+(e.g., If it's a VFW Hall + Edibles, the Boomers are staring but slowly starting to giggle at the glow-in-the-dark Jesus.)
 """
         
         with st.spinner('Waiting for the room to react...'):
@@ -94,5 +112,6 @@ Bit: {bit_text}
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
