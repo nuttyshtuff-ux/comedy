@@ -24,7 +24,6 @@ VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to
 with st.sidebar:
     st.title("🎤 Room Setup")
     
-    # UPDATED CITY INPUT
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City for the Local Vibe")
     
@@ -40,26 +39,53 @@ with st.sidebar:
 
     st.markdown("---")
     st.header("💡 Pro Mode")
-    
-    # Consistency Toggle
     lock_mode = st.checkbox("Lock Structure (Deterministic)", value=True)
     st.caption("✅ **Checked:** Logical results. \n\n❌ **Unchecked:** Creative variations.")
     
     st.markdown(" ") 
-    
-    # Coach Mode
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
     st.caption("Grade a bit OR (if left blank) get premise suggestions.")
 
+    # --- NEW: SAVE SESSION SECTION ---
+    st.markdown("---")
+    st.header("💾 Save Session")
+    
+    # We use session_state to keep track of the last response
+    if "last_response" in st.session_state:
+        # Create the text for the file
+        session_text = f"""COMEDY CROWD SIM SESSION
+---------------------------
+CITY: {city}
+VENUE: {', '.join(sel_crowds)}
+AUDIENCE: {', '.join(sel_ages)}
+VIBE: {', '.join(sel_vibes)}
+
+ORIGINAL BIT:
+{st.session_state.get('last_bit', 'N/A')}
+
+---------------------------
+SIMULATION FEEDBACK:
+{st.session_state['last_response']}
+---------------------------
+"""
+        st.download_button(
+            label="Download Session (.txt)",
+            data=session_text,
+            file_name=f"comedy_sim_{city.replace(' ', '_')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+    else:
+        st.caption("Run a simulation first to download the results.")
+
 # --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a joke to simulate... or leave blank with 'Coach Me' on for writing prompts.")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a joke to simulate... or leave blank with 'Coach Me' on.")
 
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if sel_crowds and sel_ages and sel_vibes:
         try:
             current_temp = 0.1 if lock_mode else 0.7
-            
             config = types.GenerateContentConfig(
                 temperature=current_temp,
                 top_p=0.95,
@@ -67,42 +93,12 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
             )
 
             if not bit_text.strip() and coach_mode:
-                prompt = f"""
-                ACT AS A COMEDY WRITING PARTNER. 
-                Suggest 5 premises for this room:
-                VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
-                
-                Focus on:
-                - Locally relevant topics for {city}.
-                - Relatable hooks for {', '.join(sel_ages)}.
-                - Edgy or observational angles that fit a {', '.join(sel_vibes)} vibe.
-                
-                RESPONSE STRUCTURE:
-                1. WHY THIS ROOM IS TOUGH
-                2. 5 PREMISE SUGGESTIONS (Hook + Possible Angle)
-                3. OPENING LINE IDEA
-                """
+                prompt = f"ACT AS A COMEDY WRITING PARTNER. Suggest 5 premises for: VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city}"
                 spinner_msg = f"Fetching {city} premises..."
-            
-            elif bit_text.strip():
-                coach_instruction = f"Include a 'COACH'S CORNER' for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
-                prompt = f"""
-                ACT AS A COMEDY AUDIENCE SIMULATOR. 
-                {coach_instruction} 
-                VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
-                BIT: {bit_text}
-                
-                STRUCTURE:
-                1. THE ROOM SOUND
-                2. AUDIENCE PERSONAS
-                3. IS IT FUNNY?
-                4. SCORECARD (Laughter %, Tension %, Kill Probability %)
-                5. THE TAG
-                """
-                spinner_msg = "Simulating the room..."
             else:
-                st.warning("Please paste a joke or turn on 'Coach Me' for suggestions!")
-                st.stop()
+                coach_instruction = f"Include a 'COACH'S CORNER' for {sel_ages} in {sel_crowds}." if coach_mode else ""
+                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instruction} VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city} | BIT: {bit_text}"
+                spinner_msg = "Simulating the room..."
 
             with st.spinner(spinner_msg):
                 response = client.models.generate_content(
@@ -111,9 +107,16 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     config=config
                 )
                 
+                # Store in session state for the download button
+                st.session_state['last_response'] = response.text
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
+                
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
+                
+                # Rerun to update the sidebar with the download button
+                st.rerun()
                 
         except Exception as e:
             st.error(f"Error: {e}")
