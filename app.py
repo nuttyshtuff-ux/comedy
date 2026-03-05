@@ -4,7 +4,7 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# SECURE API KEY
+# SECURE API KEY (Pulls from Streamlit Cloud Secrets)
 api_key = st.secrets.get("api_key", "YOUR_API_KEY_HERE")
 genai.configure(api_key=api_key)
 
@@ -34,16 +34,15 @@ MODIFIERS = {
     "Actually Liking You": "A rare 'Friendly' room."
 }
 
-CITIES = ["San Luis Obispo", "Bakersfield", "Fresno", "Santa Maria", "New York City", "Los Angeles", "Chicago", "Austin", "Nashville", "London", "Toronto", "Rural Small Town", "Las Vegas"]
-
 STYLES = ["Observational", "Deadpan/One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical", "Political", "Absurdist"]
 
-# --- 3. SIDEBAR UI ---
+# --- 3. SIDEBAR UI (Dynamic Input Mode) ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     
     st.header("1. Location")
-    city_choice = st.selectbox("Select City", CITIES)
+    # REPLACED DROPDOWN WITH TEXT INPUT
+    city_choice = st.text_input("Enter City or Venue", placeholder="e.g. Bakersfield, CA or London", value="San Luis Obispo")
     
     st.header("2. Crowd Mix")
     st.caption("Select all that apply:")
@@ -63,9 +62,9 @@ with st.sidebar:
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"### *Simulating {city_choice}...*")
+st.markdown(f"### *Simulating a set in {city_choice}...*")
 
-bit_text = st.text_area("Paste your set here:", placeholder="Start typing your bit...", height=250)
+bit_text = st.text_area("Paste your set here:", placeholder="Type your bit here...", height=250)
 
 if st.button("Do the Set"):
     if bit_text and selected_crowds and selected_mods and selected_styles:
@@ -74,25 +73,24 @@ if st.button("Do the Set"):
         mod_desc = ", ".join(selected_mods)
         style_desc = ", ".join(selected_styles)
 
+        # THE BRAIN: SYSTEM PROMPT
         SYSTEM_PROMPT = f"""
         You are a Professional Comedy Simulation Engine. Respond as an audience in {city_choice}.
+        
+        GEOGRAPHIC CONTEXT:
+        Use the local culture, slang, and typical comedic sensibilities of {city_choice} to inform the reaction.
         
         ROOM DYNAMICS:
         - MIXED CROWD: {crowd_desc}
         - CURRENT VIBE: {mod_desc}
         - YOUR STYLE: {style_desc}
         
-        SPECIFIC LOGIC:
-        - If 'The Comedy Shop': Simulate a 'Mecca' vibe where people expect greatness; if the bit is hacky, describe a 'cold' silence.
-        - If 'Don't Tell Comedy': Simulate a very focused, intimate audience that is there for the 'experience.'
-        - If 'Underground Comedy': Simulate a gritty, basement atmosphere where 'edgy' or 'experimental' bits land better.
-
         OUTPUT FORMAT:
-        1. THE ROOM SOUND: (e.g. *The clinking of glasses in a dark hallway and a sharp snort*)
-        2. AUDIENCE PERSONAS: 3 distinct reactions from this hybrid {city_choice} room.
-        3. STYLE CONFLICT: How did the {style_desc} style mesh with the {mod_desc} state in this specific venue?
+        1. THE ROOM SOUND: (e.g. *The hum of an AC unit and a sharp, cynical laugh from the back*)
+        2. AUDIENCE PERSONAS: 3 distinct reactions from people who would typically live in or visit {city_choice}.
+        3. LOCAL VIBE CHECK: Did the bit feel like it 'belonged' in {city_choice}?
         4. SCORECARD: Laughter (0-100%), Tension, and 'Kill' Probability.
-        5. COACH'S TIP: One actionable sentence for this specific {city_choice} mashup.
+        5. COACH'S TIP: One actionable sentence to optimize this {style_desc} bit for {city_choice}.
         """
         
         model = genai.GenerativeModel('gemini-1.5-flash')
@@ -102,8 +100,10 @@ if st.button("Do the Set"):
                 response = model.generate_content([SYSTEM_PROMPT, bit_text])
                 st.markdown("---")
                 st.markdown(response.text)
-                if "100%" in response.text: st.balloons()
+                
+                if "100%" in response.text:
+                    st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}. Check your Secrets!")
+                st.error(f"Error: {e}. Check your Secrets tab!")
     else:
-        st.error("Missing data! Make sure you checked at least one box in every sidebar section.")
+        st.error("Missing data! Make sure you entered a city and checked at least one box in every section.")
