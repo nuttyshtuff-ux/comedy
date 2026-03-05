@@ -5,6 +5,33 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
+# --- CSS TO HIDE BRANDING & OPTIMIZE MOBILE ---
+st.markdown("""
+    <style>
+    /* Hide the Streamlit "Made with Streamlit" footer */
+    footer {visibility: hidden;}
+    
+    /* Hide the header/hamburger menu if you want total immersion */
+    header {visibility: hidden;}
+    
+    /* Remove the top red/decoration bar */
+    .stAppDeployButton {display:none;}
+    [data-testid="stDecoration"] {display:none;}
+
+    /* Mobile font fix: Prevent auto-zoom on iOS */
+    div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
+    
+    /* Make the Run button pop */
+    .stButton button {
+        height: 3.5em;
+        border-radius: 10px;
+        background-color: #FF4B4B; /* Optional: SLO Red vibe */
+        color: white;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key!")
@@ -17,20 +44,17 @@ VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AUDIENCES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
-# --- 3. THE SIDEBAR (All Controls Live Here Now) ---
+# --- 3. THE SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Studio Controls")
     
-    # NEW: Mode Toggles moved here for Mobile usability
     st.subheader("Workshop Tools")
-    lock_mode = st.checkbox("Lock Structure", value=True, help="Reliable format vs Creative wildcard.")
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique or (if blank) get premises.")
-    extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest ways to keep the joke going.")
-    local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject city-specific landmarks.")
+    lock_mode = st.checkbox("Lock Structure", value=True)
+    coach_mode = st.checkbox("Coach Mode", value=False)
+    extend_mode = st.checkbox("Extend Bit", value=False)
+    local_ref_mode = st.checkbox("Local Refs", value=False)
     
     st.markdown("---")
-    
-    # Room Setup
     st.subheader("Room Setup")
     city = st.text_input("City (Required)", value="San Luis Obispo")
     
@@ -43,22 +67,13 @@ with st.sidebar:
     st.header("3. Age Range (Optional)")
     sel_ages = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
     
-    st.markdown("---")
-    # Download button moved to sidebar bottom
     if "last_response" in st.session_state:
+        st.markdown("---")
         session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
         st.download_button("💾 Download Session", data=session_text, file_name="comedy_session.txt", use_container_width=True)
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-
-# Mobile CSS Tweak: Ensures text area and buttons are easy to tap
-st.markdown("""
-    <style>
-    div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
-    .stButton button { height: 3.5em; border-radius: 10px; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
 
 bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
 
@@ -80,7 +95,7 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
             age_str = ", ".join(sel_ages) if sel_ages else "All Ages"
 
             if not bit_text.strip():
-                prompt = f"ACT AS A COMEDY WRITING PARTNER. You MUST provide EXACTLY 5 distinct comedy premises for {city} at {venue_str}. Audience: {aud_str} | Age: {age_str}. {instr_str}\nSTRUCTURE: 1. PREMISE 1, 2. PREMISE 2, 3. PREMISE 3, 4. PREMISE 5, 6. ADDITIONAL SECTIONS."
+                prompt = f"ACT AS A COMEDY WRITING PARTNER. You MUST provide EXACTLY 5 distinct comedy premises for {city} at {venue_str}. Audience: {aud_str} | Age: {age_str}. {instr_str}\nSTRUCTURE: 1. PREMISE 1, 2. PREMISE 2, 3. PREMISE 3, 4. PREMISE 4, 5. PREMISE 5, 6. ADDITIONAL SECTIONS."
             else:
                 prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate this bit: '{bit_text}' for {city} | {venue_str} | {aud_str} | {age_str}. {instr_str}"
 
