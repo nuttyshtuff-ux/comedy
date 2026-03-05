@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+from google.generativeai.types import RequestOptions
 
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
@@ -9,8 +10,7 @@ if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# THE FIX: Explicitly tell the library to use 'v1' (not v1beta)
-# This is the "Stable" lane for Paid Tier accounts
+# FORCE THE API VERSION TO V1
 genai.configure(api_key=api_key, transport='rest')
 
 # --- 2. DATA ---
@@ -45,7 +45,7 @@ if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
         try:
-            # We are calling the model without 'v1beta' in the path
+            # We use the explicit model name
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             coach_instruction = ""
@@ -54,9 +54,12 @@ if st.button("🚀 Run Simulation", use_container_width=True):
 
             prompt = f"ACT AS A COMEDY AUDIENCE. {coach_instruction} VENUE: {sel_crowds} | VIBE: {sel_vibes} | BIT: {bit_text}"
             
-            with st.spinner('Accessing the V1 Stable Server...'):
-                # This call will now target /v1/ instead of /v1beta/
-                response = model.generate_content(prompt)
+            with st.spinner('Directly Routing to V1 Production...'):
+                # THE FINAL FIX: Explicitly passing RequestOptions to force v1
+                response = model.generate_content(
+                    prompt,
+                    request_options=RequestOptions(api_version='v1')
+                )
                 
                 st.markdown("---")
                 st.markdown(response.text)
@@ -64,6 +67,6 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 
         except Exception as e:
             st.error(f"Error: {e}")
-            st.info("Check Google AI Studio: Is 'Generative Language API' enabled for your project?")
+            st.info("If you still see v1beta in the error, the library version needs an update or the API Key is restricted.")
     else:
         st.warning("Please check at least one box in every category!")
