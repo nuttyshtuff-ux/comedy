@@ -23,7 +23,7 @@ MODIFIERS = {
     "Normal": "Standard night.",
     "Hostile/Heckling": "Aggressively seeking a reason to boo.",
     "Distracted by Sports": "Eyes on the TV; you have to fight for every look.",
-    "High/Edibles": "Delayed reactions, giggly but easily confused.",
+    "Drunk 20-Somethings": "Rowdy, shouting out, easily distracted, high volume laughs but short attention spans.",
     "Passive": "The 'Arms Folded' crowd. Internal laughs only.",
     "New to Live Comedy": "Don't know the etiquette; might be too quiet or talkative.",
     "Skeptical but Hopeful": "They've seen bad acts tonight; prove you aren't one.",
@@ -82,8 +82,10 @@ if st.button("Do the Set"):
         - MODIFIERS/VIBE: {mod_desc}
         - PERFORMER STYLE: {style_desc}
         
+        SPECIAL INSTRUCTION: If 'Drunk 20-Somethings' is selected, simulate high energy, occasional mid-joke interruptions, and very loud (but perhaps unearned) laughter.
+        
         OUTPUT FORMAT:
-        1. THE ROOM SOUND: (e.g. *A mix of boos and high-pitched cackling*)
+        1. THE ROOM SOUND: (e.g. *Shouting, glasses clinking, and sudden bursts of laughter*)
         2. AUDIENCE PERSONAS: 3 distinct reactions from people in this specific {city_choice} room.
         3. STYLE CONFLICT: How did the {style_desc} style mesh or clash with the {mod_desc} state?
         4. SCORECARD: Laughter (0-100%), Tension, and 'Kill' Probability.
@@ -98,10 +100,9 @@ if st.button("Do the Set"):
                 st.markdown("---")
                 st.markdown(response.text)
                 
-                # Visual celebration for a 100% kill
                 if "100%" in response.text:
                     st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}. Check your Streamlit Secrets for the 'api_key'!")
+                st.error(f"Error: {e}. Check your Streamlit Secrets!")
     else:
         st.error("Setup incomplete! Check at least one box in every sidebar section.")
