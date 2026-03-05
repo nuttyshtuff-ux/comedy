@@ -21,14 +21,23 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
 # --- 3. THE SLIM TOP BAR ---
-# Using 5 columns and leaving the outside ones empty to "squeeze" the controls
 _, c1, c2, c3, _ = st.columns([1, 2, 2, 2, 1])
 
 with c1:
-    lock_mode = st.checkbox("Lock Structure", value=True, help="Keep responses consistent")
+    # UPDATED TOOLTIP FOR LOCK STRUCTURE
+    lock_mode = st.checkbox(
+        "Lock Structure", 
+        value=True, 
+        help="✅ Checked: Precise, reliable feedback format. ❌ Unchecked: Creative, unpredictable 'wildcard' responses."
+    )
 
 with c2:
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Advice or writing prompts")
+    # UPDATED TOOLTIP FOR COACH MODE
+    coach_mode = st.checkbox(
+        "Coach Mode", 
+        value=False, 
+        help="Paste a joke for a critique, or leave the area blank to get 5 premise suggestions for this specific room."
+    )
 
 with c3:
     if "last_response" in st.session_state:
@@ -40,7 +49,7 @@ with c3:
 # --- 4. MAIN TITLE & INPUT ---
 st.title("🎤 Comedy Crowd Sim")
 
-bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here...")
+bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank with 'Coach Mode' on for premises.")
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
@@ -84,7 +93,7 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     config=config
                 )
                 st.session_state['last_response'] = response.text
-                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
                 st.session_state['last_city'] = city
                 
                 st.markdown("---")
