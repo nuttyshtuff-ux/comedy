@@ -51,23 +51,23 @@ st.title("🎤 Comedy Crowd Sim")
 bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a joke to simulate... or leave blank with 'Coach Me' on for writing prompts.")
 
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
-    # Check if we have the minimum requirements (Audience selections)
     if sel_crowds and sel_ages and sel_vibes:
         try:
-            temp_value = 0.1 if lock_mode else 0.8 # Slightly higher for prompts
+            # INCREASED TOKENS FOR BRAINSTORMING
+            # Lower temperature (0.1) for simulation, higher (0.7) for brainstorming
+            current_temp = 0.1 if lock_mode else 0.7
             
             config = types.GenerateContentConfig(
-                temperature=temp_value,
+                temperature=current_temp,
                 top_p=0.95,
-                max_output_tokens=1024,
+                max_output_tokens=2048, # THE FIX: Doubled the limit to prevent cutoffs
             )
 
             # --- LOGIC: SIMULATE OR SUGGEST? ---
             if not bit_text.strip() and coach_mode:
-                # WRITING PARTNER MODE
                 prompt = f"""
                 ACT AS A COMEDY WRITING PARTNER. 
-                The user has no material yet. Based on the following room, suggest 5 specific comedy premises or 'seed' ideas.
+                The user has no material yet. Suggest 5 premises for this room:
                 VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
                 
                 Focus on:
@@ -75,16 +75,15 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 - Relatable hooks for {', '.join(sel_ages)}.
                 - Edgy or observational angles that fit a {', '.join(sel_vibes)} vibe.
                 
-                STRUCTURE:
-                1. WHY THIS ROOM IS TOUGH (Brief psych breakdown)
+                RESPONSE STRUCTURE:
+                1. WHY THIS ROOM IS TOUGH (Psych breakdown)
                 2. 5 PREMISE SUGGESTIONS (Hook + Possible Angle)
                 3. OPENING LINE IDEA
                 """
                 spinner_msg = "Brainstorming premises for this room..."
             
             elif bit_text.strip():
-                # STANDARD SIMULATION MODE
-                coach_instruction = f"Provide a 'COACH'S CORNER' for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
+                coach_instruction = f"Include a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
                 prompt = f"""
                 ACT AS A COMEDY AUDIENCE SIMULATOR. 
                 {coach_instruction} 
@@ -117,4 +116,4 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Please check at least one box in every category (Audience, Age, and Vibe)!")
+        st.warning("Please check at least one box in every category!")
