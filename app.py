@@ -23,7 +23,10 @@ VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to
 # --- 3. SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Room Setup")
+    
+    # CITY INPUT WITH CAPTION
     city = st.text_input("City", value="San Luis Obispo")
+    st.caption("📍 Enter a city to generate locally relevant premises and heckles.")
     
     st.markdown("---")
     st.header("1. The Audience")
@@ -53,21 +56,19 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if sel_crowds and sel_ages and sel_vibes:
         try:
-            # INCREASED TOKENS FOR BRAINSTORMING
-            # Lower temperature (0.1) for simulation, higher (0.7) for brainstorming
             current_temp = 0.1 if lock_mode else 0.7
             
             config = types.GenerateContentConfig(
                 temperature=current_temp,
                 top_p=0.95,
-                max_output_tokens=2048, # THE FIX: Doubled the limit to prevent cutoffs
+                max_output_tokens=2048, 
             )
 
             # --- LOGIC: SIMULATE OR SUGGEST? ---
             if not bit_text.strip() and coach_mode:
                 prompt = f"""
                 ACT AS A COMEDY WRITING PARTNER. 
-                The user has no material yet. Suggest 5 premises for this room:
+                Suggest 5 premises for this room:
                 VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
                 
                 Focus on:
@@ -76,14 +77,14 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 - Edgy or observational angles that fit a {', '.join(sel_vibes)} vibe.
                 
                 RESPONSE STRUCTURE:
-                1. WHY THIS ROOM IS TOUGH (Psych breakdown)
+                1. WHY THIS ROOM IS TOUGH
                 2. 5 PREMISE SUGGESTIONS (Hook + Possible Angle)
                 3. OPENING LINE IDEA
                 """
-                spinner_msg = "Brainstorming premises for this room..."
+                spinner_msg = f"Brainstorming {city} premises..."
             
             elif bit_text.strip():
-                coach_instruction = f"Include a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
+                coach_instruction = f"Include a 'COACH'S CORNER' for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
                 prompt = f"""
                 ACT AS A COMEDY AUDIENCE SIMULATOR. 
                 {coach_instruction} 
