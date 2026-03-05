@@ -40,9 +40,7 @@ st.title("🎤 The Crowd Evaluator")
 st.markdown("### *Test your set before the robots take over.*")
 
 with st.sidebar:
-    st.header("Step 1: Pick Your Room")
-    
-    with st.sidebar:
+  
     st.header("Step 1: The Crowd Base")
     base_room = st.selectbox("Base Crowd", list(CROWD_PRESETS.keys()))
     
@@ -87,6 +85,7 @@ AI TASK: Respond as if the modifier is fighting the base crowd.
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
 
