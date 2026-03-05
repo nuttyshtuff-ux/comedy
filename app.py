@@ -20,7 +20,7 @@ CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
-# --- 3. SIDEBAR ---
+# --- 3. SIDEBAR (The Room) ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     
@@ -37,51 +37,35 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
+    # --- SAVE SESSION (Kept in Sidebar for easy access) ---
     st.markdown("---")
-    st.header("💡 Pro Mode")
+    st.header("💾 Save Session")
+    if "last_response" in st.session_state:
+        session_text = f"CITY: {city}\nVENUE: {sel_crowds}\nAUDIENCE: {sel_ages}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
+        st.download_button("Download Session (.txt)", data=session_text, file_name=f"comedy_sim_{city}.txt", use_container_width=True)
+    else:
+        st.caption("Run a simulation to save.")
+
+# --- 4. MAIN INTERFACE ---
+st.title("🎤 Comedy Crowd Sim")
+
+# THE NEW TOP BAR
+st.markdown("### 💡 Pro Mode Controls")
+col1, col2 = st.columns(2)
+
+with col1:
     lock_mode = st.checkbox("Lock Structure (Deterministic)", value=True)
-    st.caption("✅ **Checked:** Logical results. \n\n❌ **Unchecked:** Creative variations.")
-    
-    st.markdown(" ") 
+    st.caption("✅ **Checked:** Logical results. ❌ **Unchecked:** Creative variations.")
+
+with col2:
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
     st.caption("Grade a bit OR (if left blank) get premise suggestions.")
 
-    # --- NEW: SAVE SESSION SECTION ---
-    st.markdown("---")
-    st.header("💾 Save Session")
-    
-    # We use session_state to keep track of the last response
-    if "last_response" in st.session_state:
-        # Create the text for the file
-        session_text = f"""COMEDY CROWD SIM SESSION
----------------------------
-CITY: {city}
-VENUE: {', '.join(sel_crowds)}
-AUDIENCE: {', '.join(sel_ages)}
-VIBE: {', '.join(sel_vibes)}
+st.markdown("---")
 
-ORIGINAL BIT:
-{st.session_state.get('last_bit', 'N/A')}
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Drop your bit here...")
 
----------------------------
-SIMULATION FEEDBACK:
-{st.session_state['last_response']}
----------------------------
-"""
-        st.download_button(
-            label="Download Session (.txt)",
-            data=session_text,
-            file_name=f"comedy_sim_{city.replace(' ', '_')}.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
-    else:
-        st.caption("Run a simulation first to download the results.")
-
-# --- 4. MAIN ---
-st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a joke to simulate... or leave blank with 'Coach Me' on.")
-
+# --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if sel_crowds and sel_ages and sel_vibes:
         try:
@@ -106,19 +90,15 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     contents=prompt,
                     config=config
                 )
-                
-                # Store in session state for the download button
                 st.session_state['last_response'] = response.text
-                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
                 
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
-                
-                # Rerun to update the sidebar with the download button
                 st.rerun()
                 
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Please check at least one box in every category!")
+        st.warning("Please check at least one box in every category in the sidebar!")
