@@ -5,29 +5,18 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# --- REFINED CSS (Total Branding Removal while KEEPING Sidebar Toggle) ---
+# --- MINIMAL CSS (Only for Mobile font fix) ---
 st.markdown("""
     <style>
-    /* 1. Kill the 'Made with Streamlit' footer */
-    footer {visibility: hidden;}
-    
-    /* 2. Hide only the specific branding elements in the header */
-    /* This targets the Deploy button and the small app status icon */
-    .stAppDeployButton {display:none !important;}
-    [data-testid="stStatusWidget"] {display:none !important;}
-    
-    /* 3. Hide the 'three dots' menu on the right, but keep the header for the sidebar button */
-    #MainMenu {visibility: hidden;}
-    
-    /* 4. Remove the top red/decoration bar */
-    [data-testid="stDecoration"] {display:none !important;}
-
-    /* 5. Mobile font fix: Prevent auto-zoom on iOS */
+    /* Prevent auto-zoom on iOS by keeping font at 16px */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     
-    /* 6. Fix Sidebar Padding (No big blank gap at the top) */
-    [data-testid="stSidebarNav"] {display: none !important;}
-    [data-testid="stSidebar"] {padding-top: 2rem;}
+    /* Make the Run button easy to hit on a phone */
+    .stButton button {
+        height: 3.5em;
+        border-radius: 10px;
+        font-weight: bold;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -48,10 +37,10 @@ with st.sidebar:
     st.title("🎤 Studio Controls")
     
     st.subheader("Workshop Tools")
-    lock_mode = st.checkbox("Lock Structure", value=True)
-    coach_mode = st.checkbox("Coach Mode", value=False)
-    extend_mode = st.checkbox("Extend Bit", value=False)
-    local_ref_mode = st.checkbox("Local Refs", value=False)
+    lock_mode = st.checkbox("Lock Structure", value=True, help="✅ Checked: Precise feedback. ❌ Unchecked: Creative variations.")
+    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
+    extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest ways to keep the joke going.")
+    local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject landmarks and inside jokes for the city.")
     
     st.markdown("---")
     st.subheader("Room Setup")
@@ -114,3 +103,5 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
 if "last_response" in st.session_state:
     st.markdown("---")
     st.markdown(st.session_state['last_response'])
+    if "100%" in st.session_state['last_response']:
+        st.balloons()
