@@ -24,9 +24,9 @@ VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to
 with st.sidebar:
     st.title("🎤 Room Setup")
     
-    # CITY INPUT WITH CAPTION
+    # UPDATED CITY INPUT
     city = st.text_input("City", value="San Luis Obispo")
-    st.caption("📍 Enter a city to generate locally relevant premises and heckles.")
+    st.caption("Enter a City for the Local Vibe")
     
     st.markdown("---")
     st.header("1. The Audience")
@@ -41,11 +41,13 @@ with st.sidebar:
     st.markdown("---")
     st.header("💡 Pro Mode")
     
+    # Consistency Toggle
     lock_mode = st.checkbox("Lock Structure (Deterministic)", value=True)
     st.caption("✅ **Checked:** Logical results. \n\n❌ **Unchecked:** Creative variations.")
     
     st.markdown(" ") 
     
+    # Coach Mode
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
     st.caption("Grade a bit OR (if left blank) get premise suggestions.")
 
@@ -64,7 +66,6 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 max_output_tokens=2048, 
             )
 
-            # --- LOGIC: SIMULATE OR SUGGEST? ---
             if not bit_text.strip() and coach_mode:
                 prompt = f"""
                 ACT AS A COMEDY WRITING PARTNER. 
@@ -81,7 +82,7 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 2. 5 PREMISE SUGGESTIONS (Hook + Possible Angle)
                 3. OPENING LINE IDEA
                 """
-                spinner_msg = f"Brainstorming {city} premises..."
+                spinner_msg = f"Fetching {city} premises..."
             
             elif bit_text.strip():
                 coach_instruction = f"Include a 'COACH'S CORNER' for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
