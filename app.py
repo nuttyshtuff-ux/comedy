@@ -39,22 +39,26 @@ with c5:
 st.title("🎤 Comedy Crowd Sim")
 bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here...")
 
-# --- 5. SIDEBAR ---
+# --- 5. SIDEBAR (Required vs Optional) ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    city = st.text_input("City", value="San Luis Obispo")
+    city = st.text_input("City (Required)", value="San Luis Obispo")
     st.caption("Enter a City for the Local Vibe")
     st.markdown("---")
-    st.header("1. The Venue")
+    
+    st.header("1. The Venue (Required)")
     sel_venues = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
-    st.header("2. The Audience")
+    
+    st.header("2. The Audience (Optional)")
     sel_audiences = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-    st.header("3. Age Range")
+    
+    st.header("3. Age Range (Optional)")
     sel_ages = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
 # --- 6. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
-    if sel_venues and sel_audiences and sel_ages:
+    # CHANGED: Now only requires City and Venues
+    if city.strip() and sel_venues:
         try:
             current_temp = 0.1 if lock_mode else 0.7
             config = types.GenerateContentConfig(
@@ -63,15 +67,17 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 max_output_tokens=2048, 
             )
 
+            # Build strings, handling empty optionals
+            venue_str = ", ".join(sel_venues)
+            aud_str = ", ".join(sel_audiences) if sel_audiences else "Unknown/Mixed Crowd"
+            age_str = ", ".join(sel_ages) if sel_ages else "Unknown/All Ages"
+
             instructions = []
             if coach_mode: instructions.append("Include a 'COACH'S CORNER' feedback section.")
             if extend_mode: instructions.append("Add a section 'THE NEXT 3 MINUTES' to expand this bit.")
             if local_ref_mode: instructions.append(f"Suggest specific local references for {city}.")
             
             instr_str = " ".join(instructions)
-            venue_str = ", ".join(sel_venues)
-            aud_str = ", ".join(sel_audiences)
-            age_str = ", ".join(sel_ages)
 
             if not bit_text.strip() and coach_mode:
                 prompt = f"ACT AS A COMEDY WRITING PARTNER. {instr_str} Suggest 5 premises for: VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city}"
@@ -86,21 +92,17 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     contents=prompt,
                     config=config
                 )
-                # SAVE TO MEMORY FIRST
                 st.session_state['last_response'] = response.text
-                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
                 st.session_state['last_city'] = city
-                
-                # REFRESH TO SHOW DOWNLOAD BUTTON
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
                 st.rerun()
                 
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Please select Venue, Audience, and Age in the sidebar!")
+        st.warning("Please ensure City and at least one Venue are selected!")
 
 # --- 7. DISPLAY RESULTS ---
-# This block stays on screen even after the rerun!
 if "last_response" in st.session_state:
     st.markdown("---")
     st.markdown(st.session_state['last_response'])
