@@ -4,12 +4,15 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# SECURE API KEY (Pulls from Streamlit Cloud Secrets)
+# SECURE API KEY
 api_key = st.secrets.get("api_key", "YOUR_API_KEY_HERE")
 genai.configure(api_key=api_key)
 
 # --- 2. DATA DICTIONARIES ---
 CROWD_PRESETS = {
+    "Underground Comedy": "Basement/DIY vibe, raw energy, hipsters and comedy nerds, forgiving but expects edge.",
+    "The Comedy Shop (The Store)": "Historical industry pressure, 'Passed Regular' energy, pitch-black room, high expectations.",
+    "Don't Tell Comedy": "Pop-up/Secret location, attentive 'house party' vibe, no drink minimum, very supportive.",
     "The College Gig": "Gen Z, TikTok attention spans, easily offended but energetic.",
     "The Biker Bar": "Gen X, leather, zero patience, heavy drinkers.",
     "The VFW Hall": "Boomers, staring over light beer, very literal.",
@@ -23,7 +26,7 @@ MODIFIERS = {
     "Normal": "Standard night.",
     "Hostile/Heckling": "Aggressively seeking a reason to boo.",
     "Distracted by Sports": "Eyes on the TV; you have to fight for every look.",
-    "Drunk 20-Somethings": "Rowdy, shouting out, easily distracted, high volume laughs but short attention spans.",
+    "Drunk 20-Somethings": "Rowdy, shouting out, high volume laughs but short attention spans.",
     "Passive": "The 'Arms Folded' crowd. Internal laughs only.",
     "New to Live Comedy": "Don't know the etiquette; might be too quiet or talkative.",
     "Skeptical but Hopeful": "They've seen bad acts tonight; prove you aren't one.",
@@ -35,7 +38,7 @@ CITIES = ["San Luis Obispo", "Bakersfield", "Fresno", "Santa Maria", "New York C
 
 STYLES = ["Observational", "Deadpan/One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical", "Political", "Absurdist"]
 
-# --- 3. SIDEBAR UI (Multi-Select Chaos Mode) ---
+# --- 3. SIDEBAR UI ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     
@@ -43,66 +46,64 @@ with st.sidebar:
     city_choice = st.selectbox("Select City", CITIES)
     
     st.header("2. Crowd Mix")
-    st.caption("Who is in the room? (Check all that apply)")
+    st.caption("Select all that apply:")
     selected_crowds = [c for c in CROWD_PRESETS.keys() if st.checkbox(c)]
     
     st.header("3. Crowd States")
-    st.caption("What is the current 'Vibe'?")
+    st.caption("What's the 'Vibe'?")
     selected_mods = [m for m in MODIFIERS.keys() if st.checkbox(m)]
     
     st.header("4. Performance Styles")
-    st.caption("How are you delivering this set?")
+    st.caption("How are you delivering this?")
     selected_styles = [s for s in STYLES if st.checkbox(s)]
 
     st.divider()
     if not selected_crowds or not selected_mods or not selected_styles:
-        st.warning("⚠️ Select at least one item in each category to begin!")
+        st.warning("⚠️ Select at least one item in each category!")
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"### *Live from {city_choice}...*")
+st.markdown(f"### *Simulating {city_choice}...*")
 
-bit_text = st.text_area("Paste your set here:", placeholder="Start your bit...", height=250)
+bit_text = st.text_area("Paste your set here:", placeholder="Start typing your bit...", height=250)
 
 if st.button("Do the Set"):
     if bit_text and selected_crowds and selected_mods and selected_styles:
         
-        # Build the descriptive strings for the AI prompt
         crowd_desc = ", ".join(selected_crowds)
         mod_desc = ", ".join(selected_mods)
         style_desc = ", ".join(selected_styles)
 
-        # THE BRAIN: SYSTEM PROMPT
         SYSTEM_PROMPT = f"""
-        You are a Professional Comedy Simulation Engine. 
-        Respond as a live audience in {city_choice}.
+        You are a Professional Comedy Simulation Engine. Respond as an audience in {city_choice}.
         
         ROOM DYNAMICS:
-        - CROWD TYPES: {crowd_desc}
-        - MODIFIERS/VIBE: {mod_desc}
-        - PERFORMER STYLE: {style_desc}
+        - MIXED CROWD: {crowd_desc}
+        - CURRENT VIBE: {mod_desc}
+        - YOUR STYLE: {style_desc}
         
-        SPECIAL INSTRUCTION: If 'Drunk 20-Somethings' is selected, simulate high energy, occasional mid-joke interruptions, and very loud (but perhaps unearned) laughter.
-        
+        SPECIFIC LOGIC:
+        - If 'The Comedy Shop': Simulate a 'Mecca' vibe where people expect greatness; if the bit is hacky, describe a 'cold' silence.
+        - If 'Don't Tell Comedy': Simulate a very focused, intimate audience that is there for the 'experience.'
+        - If 'Underground Comedy': Simulate a gritty, basement atmosphere where 'edgy' or 'experimental' bits land better.
+
         OUTPUT FORMAT:
-        1. THE ROOM SOUND: (e.g. *Shouting, glasses clinking, and sudden bursts of laughter*)
-        2. AUDIENCE PERSONAS: 3 distinct reactions from people in this specific {city_choice} room.
-        3. STYLE CONFLICT: How did the {style_desc} style mesh or clash with the {mod_desc} state?
+        1. THE ROOM SOUND: (e.g. *The clinking of glasses in a dark hallway and a sharp snort*)
+        2. AUDIENCE PERSONAS: 3 distinct reactions from this hybrid {city_choice} room.
+        3. STYLE CONFLICT: How did the {style_desc} style mesh with the {mod_desc} state in this specific venue?
         4. SCORECARD: Laughter (0-100%), Tension, and 'Kill' Probability.
         5. COACH'S TIP: One actionable sentence for this specific {city_choice} mashup.
         """
         
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        with st.spinner(f'Checking the vibe in {city_choice}...'):
+        with st.spinner(f'Checking the room in {city_choice}...'):
             try:
                 response = model.generate_content([SYSTEM_PROMPT, bit_text])
                 st.markdown("---")
                 st.markdown(response.text)
-                
-                if "100%" in response.text:
-                    st.balloons()
+                if "100%" in response.text: st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}. Check your Streamlit Secrets!")
+                st.error(f"Error: {e}. Check your Secrets!")
     else:
-        st.error("Setup incomplete! Check at least one box in every sidebar section.")
+        st.error("Missing data! Make sure you checked at least one box in every sidebar section.")
