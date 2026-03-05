@@ -20,10 +20,44 @@ CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
-# --- 3. SIDEBAR (The Room) ---
+# --- 3. THE TOP UTILITY BAR (Above the Title) ---
+# Using 3 columns to fit Lock Mode, Coach Mode, and Save Session
+top_col1, top_col2, top_col3 = st.columns([1, 1, 1])
+
+with top_col1:
+    lock_mode = st.checkbox("Lock Structure", value=True)
+    st.caption("Keep responses consistent")
+
+with top_col2:
+    coach_mode = st.checkbox("Coach Mode", value=False)
+    st.caption("Get advice or writing prompts")
+
+with top_col3:
+    if "last_response" in st.session_state:
+        # Generate the text data for the download
+        city_val = st.session_state.get('last_city', 'Unknown')
+        session_text = f"CITY: {city_val}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
+        
+        st.download_button(
+            label="💾 Download Session",
+            data=session_text,
+            file_name=f"comedy_session.txt",
+            use_container_width=True
+        )
+    else:
+        st.button("💾 Save Session", disabled=True, use_container_width=True)
+        st.caption("Run a simulation first")
+
+st.markdown("---")
+
+# --- 4. MAIN TITLE & INPUT ---
+st.title("🎤 Comedy Crowd Sim")
+
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Drop your bit here...")
+
+# --- 5. SIDEBAR (The Room Settings) ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City for the Local Vibe")
     
@@ -37,35 +71,7 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
-    # --- SAVE SESSION (Kept in Sidebar for easy access) ---
-    st.markdown("---")
-    st.header("💾 Save Session")
-    if "last_response" in st.session_state:
-        session_text = f"CITY: {city}\nVENUE: {sel_crowds}\nAUDIENCE: {sel_ages}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
-        st.download_button("Download Session (.txt)", data=session_text, file_name=f"comedy_sim_{city}.txt", use_container_width=True)
-    else:
-        st.caption("Run a simulation to save.")
-
-# --- 4. MAIN INTERFACE ---
-st.title("🎤 Comedy Crowd Sim")
-
-# THE NEW TOP BAR
-st.markdown("### 💡 Pro Mode Controls")
-col1, col2 = st.columns(2)
-
-with col1:
-    lock_mode = st.checkbox("Lock Structure (Deterministic)", value=True)
-    st.caption("✅ **Checked:** Logical results. ❌ **Unchecked:** Creative variations.")
-
-with col2:
-    coach_mode = st.checkbox("Coach Me on This Room", value=False)
-    st.caption("Grade a bit OR (if left blank) get premise suggestions.")
-
-st.markdown("---")
-
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Drop your bit here...")
-
-# --- 5. EXECUTION ---
+# --- 6. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if sel_crowds and sel_ages and sel_vibes:
         try:
@@ -90,8 +96,10 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     contents=prompt,
                     config=config
                 )
+                # Store data for the Download button in the top bar
                 st.session_state['last_response'] = response.text
                 st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
+                st.session_state['last_city'] = city
                 
                 st.markdown("---")
                 st.markdown(response.text)
