@@ -5,13 +5,29 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# --- MINIMAL CSS (Only for Mobile font fix) ---
+# --- CUSTOM CSS: Centering & Mobile Label ---
 st.markdown("""
     <style>
-    /* Prevent auto-zoom on iOS by keeping font at 16px */
+    /* 1. Center the Main Title */
+    .stApp h1 {
+        text-align: center;
+        width: 100%;
+    }
+
+    /* 2. Add "Options" label next to the hamburger menu on mobile */
+    /* This targets the button area and adds text after the icon */
+    [data-testid="stHeader"]::before {
+        content: 'Options';
+        position: absolute;
+        left: 50px;
+        top: 15px;
+        font-weight: bold;
+        font-size: 16px;
+        color: #31333F; /* Standard Streamlit text color */
+    }
+
+    /* 3. Mobile font fix & Button styling */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
-    
-    /* Make the Run button easy to hit on a phone */
     .stButton button {
         height: 3.5em;
         border-radius: 10px;
@@ -38,7 +54,7 @@ with st.sidebar:
     
     st.subheader("Workshop Tools")
     lock_mode = st.checkbox("Lock Structure", value=True, help="✅ Checked: Precise feedback. ❌ Unchecked: Creative variations.")
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
+    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get premises.")
     extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest ways to keep the joke going.")
     local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject landmarks and inside jokes for the city.")
     
