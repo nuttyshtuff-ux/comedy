@@ -20,7 +20,8 @@ CROWDS = [
     "Underground Comedy", "The Comedy Shop", "Don't Tell", 
     "The College Gig", "Dive Bar", "Upscale Bar", 
     "Comedy Showcase", "Open Mic Night", 
-    "Local Craft Brewery", "Wine Bar" # <-- Added these
+    "Local Craft Brewery", "Wine Bar",
+    "Opening for a Big Name" # <-- The High-Stakes Addition
 ]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
@@ -92,7 +93,7 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 prompt = f"ACT AS A COMEDY WRITING PARTNER. Suggest 5 premises for: VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city}"
                 spinner_msg = f"Fetching {city} premises..."
             else:
-                coach_instruction = "Include a 'COACH'S CORNER' feedback section." if coach_mode else ""
+                coach_instruction = "Include a 'COACH'S CORNER' feedback section. Especially focus on the etiquette of opening for a headliner." if coach_mode else ""
                 prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instruction} VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city} | BIT: {bit_text}"
                 spinner_msg = "Simulating the room..."
 
