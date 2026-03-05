@@ -24,7 +24,6 @@ VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to
 _, c1, c2, c3, _ = st.columns([1, 2, 2, 2, 1])
 
 with c1:
-    # UPDATED TOOLTIP FOR LOCK STRUCTURE
     lock_mode = st.checkbox(
         "Lock Structure", 
         value=True, 
@@ -32,7 +31,6 @@ with c1:
     )
 
 with c2:
-    # UPDATED TOOLTIP FOR COACH MODE
     coach_mode = st.checkbox(
         "Coach Mode", 
         value=False, 
@@ -40,11 +38,19 @@ with c2:
     )
 
 with c3:
+    # UPDATED TOOLTIP FOR SAVE/DOWNLOAD
+    save_help = "Download a .txt file containing your joke, the room settings, and the simulation results."
     if "last_response" in st.session_state:
         session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
-        st.download_button("💾 Download", data=session_text, file_name="comedy_session.txt", use_container_width=True)
+        st.download_button(
+            "💾 Download", 
+            data=session_text, 
+            file_name="comedy_session.txt", 
+            use_container_width=True,
+            help=save_help
+        )
     else:
-        st.button("💾 Save", disabled=True, use_container_width=True)
+        st.button("💾 Save", disabled=True, use_container_width=True, help=save_help)
 
 # --- 4. MAIN TITLE & INPUT ---
 st.title("🎤 Comedy Crowd Sim")
