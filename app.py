@@ -78,13 +78,13 @@ if st.button("Do the Set"):
         4. COACH'S TIP: One actionable improvement.
         """
         
-        # TRIAGE LOGIC: Try models in order of likelihood to work
+        # TRIAGE LOGIC: Try models to avoid the 404 error
         success = False
-        for model_name in ['gemini-1.5-pro', 'gemini-1.0-pro', 'gemini-pro']:
+        for model_name in ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro']:
             if success: break
             try:
                 model = genai.GenerativeModel(model_name)
-                with st.spinner(f'Trying {model_name}...'):
+                with st.spinner(f'Consulting the room via {model_name}...'):
                     response = model.generate_content([SYSTEM_PROMPT, bit_text])
                     st.markdown("---")
                     st.markdown(response.text)
@@ -94,6 +94,6 @@ if st.button("Do the Set"):
                 continue
         
         if not success:
-            st.error("All models failed. This is usually due to an API Key that hasn't been activated for 'Pay-as-you-go' or is restricted in your region.")
+            st.error("All models failed. Check your API key and internet connection.")
     else:
-        st.error("Setup incomplete! Check at least one box in every sidebar section.")h
+        st.error("Setup incomplete! Check at least one box in every sidebar section.")
