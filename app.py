@@ -5,21 +5,19 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# Ensure your Streamlit Secret is named 'api_key'
 api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# INITIALIZE CLIENT: Force the v1 production endpoint
-# This is the fix for the v1beta 404 error.
+# FORCE V1 PRODUCTION WITH THE NEWEST MODEL
 try:
     client = genai.Client(
         api_key=api_key,
-        http_options={'api_version': 'v1'}
+        http_options=types.HttpOptions(api_version='v1')
     )
 except Exception as e:
-    st.error(f"Initialization Error: {e}")
+    st.error(f"Client Setup Error: {e}")
     st.stop()
 
 # --- 2. DATA ---
@@ -42,46 +40,27 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
-    # COACH MODE AT BOTTOM
     st.markdown("---")
     st.header("💡 Pro Mode")
-    coach_mode = st.checkbox("Coach Me on This Room", value=False, help="Get psychological advice for this specific crowd.")
+    coach_mode = st.checkbox("Coach Me on This Room", value=False)
 
-# --- 4. MAIN INTERFACE ---
+# --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Wait for the rebuild, then paste your bit...")
+bit_text = st.text_area("Paste your set here:", height=300)
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         try:
-            # Constructing the instruction for the AI
             coach_instruction = ""
             if coach_mode:
-                coach_instruction = f"""
-                COACH'S CORNER: Before the simulation, provide a section called 'COACH'S CORNER'. 
-                Give specific advice on how to handle {', '.join(sel_ages)} in a {', '.join(sel_crowds)} venue with a {', '.join(sel_vibes)} vibe.
-                """
+                coach_instruction = f"Provide a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}."
 
-            prompt = f"""
-            SYSTEM: You are a Professional Comedy Simulation Engine.
-            {coach_instruction}
+            prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instruction} VENUE: {sel_crowds} | VIBE: {sel_vibes} | BIT: {bit_text}"
             
-            VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
-            BIT: {bit_text}
-            
-            STRUCTURE:
-            (Start with COACH'S CORNER if active)
-            1. THE ROOM SOUND (Literal background noise and laughter)
-            2. AUDIENCE PERSONAS (3 distinct person reactions)
-            3. IS IT FUNNY? (Blunt, honest feedback)
-            4. SCORECARD (Laughter %, Tension %, Kill Probability %)
-            5. THE TAG (One sharp line to add to the bit)
-            """
-            
-            with st.spinner('Accessing the V1 Production API...'):
-                # THE NEW SDK SYNTAX
+            with st.spinner('Engaging Gemini 2.5 Flash Production...'):
+                # WE ARE USING THE STABLE 2.5 FLASH MODEL HERE
                 response = client.models.generate_content(
-                    model="gemini-1.5-flash",
+                    model="gemini-2.5-flash",
                     contents=prompt
                 )
                 
@@ -91,7 +70,6 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 
         except Exception as e:
             st.error(f"API Error: {e}")
-            if "404" in str(e):
-                st.warning("Still seeing 404? This is a 'Stale API Key' issue. Create a NEW Key in a NEW Project in AI Studio.")
+            st.info("If gemini-2.5-flash also 404s, your API Key is restricted to a legacy project. Go to AI Studio and 'Create API key in NEW project'.")
     else:
         st.warning("Please check at least one box in every category!")
