@@ -78,24 +78,22 @@ if st.button("Do the Set"):
         4. COACH'S TIP: One actionable improvement.
         """
         
-        # FIX: Try the standard model name first
-        try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            with st.spinner('Checking the vibe...'):
-                response = model.generate_content([SYSTEM_PROMPT, bit_text])
-                st.markdown("---")
-                st.markdown(response.text)
-                if "100%" in response.text: st.balloons()
-        except Exception as e:
-            st.error(f"Error with primary model: {e}")
-            st.info("Attempting to connect via fallback model...")
-            # FALLBACK: Try the versioned string if the first one fails
+        # TRIAGE LOGIC: Try models in order of likelihood to work
+        success = False
+        for model_name in ['gemini-1.5-pro', 'gemini-1.0-pro', 'gemini-pro']:
+            if success: break
             try:
-                model = genai.GenerativeModel('models/gemini-1.5-flash')
-                response = model.generate_content([SYSTEM_PROMPT, bit_text])
-                st.markdown("---")
-                st.markdown(response.text)
-            except Exception as e2:
-                st.error(f"Critical Error: {e2}")
+                model = genai.GenerativeModel(model_name)
+                with st.spinner(f'Trying {model_name}...'):
+                    response = model.generate_content([SYSTEM_PROMPT, bit_text])
+                    st.markdown("---")
+                    st.markdown(response.text)
+                    if "100%" in response.text: st.balloons()
+                    success = True
+            except Exception:
+                continue
+        
+        if not success:
+            st.error("All models failed. This is usually due to an API Key that hasn't been activated for 'Pay-as-you-go' or is restricted in your region.")
     else:
-        st.error("Setup incomplete! Check at least one box in every sidebar section.")
+        st.error("Setup incomplete! Check at least one box in every sidebar section.")h
