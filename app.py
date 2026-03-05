@@ -4,7 +4,7 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# SECURE API KEY
+# Retrieve API key
 api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("API Key missing! Check your Streamlit Secrets.")
@@ -12,7 +12,7 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# --- 2. DATA DICTIONARIES ---
+# --- 2. DATA ---
 CROWD_PRESETS = {
     "Underground Comedy": "Basement vibe, raw energy, hipsters/nerds.",
     "The Comedy Shop (The Store)": "Industry pressure, pitch-black room, high expectations.",
@@ -54,10 +54,6 @@ with st.sidebar:
     st.header("3. Performance Styles")
     selected_styles = [s for s in STYLES if st.checkbox(s)]
 
-    st.divider()
-    if not selected_crowds or not selected_mods or not selected_styles:
-        st.warning("⚠️ Select at least one in each category!")
-
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
 st.markdown(f"### *Live from {city_choice}...*")
@@ -71,18 +67,9 @@ if st.button("Do the Set"):
         mod_desc = ", ".join(selected_mods)
         style_desc = ", ".join(selected_styles)
 
-        SYSTEM_PROMPT = f"""
-        You are a Professional Comedy Simulation Engine. Respond as an audience in {city_choice}.
-        CROWD: {crowd_desc} | VIBE: {mod_desc} | STYLE: {style_desc}
-        
-        OUTPUT FORMAT:
-        1. THE ROOM SOUND: (Auditory feedback)
-        2. AUDIENCE PERSONAS: 3 distinct reactions.
-        3. SCORECARD: Laughter (0-100%), Tension, Kill Probability.
-        4. COACH'S TIP: One actionable improvement.
-        """
+        SYSTEM_PROMPT = f"Analyze this comedy bit for a {city_choice} crowd. CROWD: {crowd_desc}. VIBE: {mod_desc}. STYLE: {style_desc}. Provide: 1. Room Sound, 2. Audience Personas, 3. Scorecard (Laughter/Kill Prob), 4. Coach's Tip."
 
-        # SAFETY FILTERS (Critical for your specific material)
+        # SAFETY SETTINGS
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -90,26 +77,28 @@ if st.button("Do the Set"):
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
 
-        # TRIAGE LOGIC
+        # TRIAGE LOGIC: Try every possible model name variation
         success = False
-        models_to_try = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro']
+        # These are the most common supported strings for billing-enabled keys
+        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
         
+        last_error = ""
         for model_name in models_to_try:
             if success: break
             try:
                 model = genai.GenerativeModel(model_name=model_name, safety_settings=safety_settings)
-                with st.spinner(f'Checking {model_name}...'):
+                with st.spinner(f'Trying {model_name}...'):
                     response = model.generate_content([SYSTEM_PROMPT, bit_text])
                     st.markdown("---")
                     st.markdown(response.text)
                     if "100%" in response.text: st.balloons()
                     success = True
             except Exception as e:
-                last_error = e
+                last_error = str(e)
                 continue
         
         if not success:
-            st.error(f"Error: {last_error}")
-            st.info("If you just enabled billing, it may take 5-10 minutes to activate.")
+            st.error(f"Models are still activating: {last_error}")
+            st.info("Wait 2 minutes and try again. Google is currently linking your billing to the API models.")
     else:
         st.error("Setup incomplete!")
