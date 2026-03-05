@@ -30,10 +30,10 @@ with c2:
     coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
 
 with c3:
-    extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest 3-5 ways to keep the joke going or find a new angle.")
+    extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest 3-5 ways to keep the joke going.")
 
 with c4:
-    local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject landmarks and inside jokes for the selected city.")
+    local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject landmarks and inside jokes for the city.")
 
 with c5:
     if "last_response" in st.session_state:
@@ -44,7 +44,7 @@ with c5:
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank with 'Coach Mode' on for premises.")
+bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here...")
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
@@ -74,15 +74,39 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
             # Build instructions
             instructions = []
             if coach_mode: instructions.append("Include a 'COACH'S CORNER' feedback section.")
-            if extend_mode: instructions.append("Add a section 'THE NEXT 3 MINUTES' with 3-5 ways to expand this bit.")
-            if local_ref_mode: instructions.append(f"Suggest 3-5 specific local references or inside jokes unique to {city}.")
+            if extend_mode: instructions.append("Add a section 'THE NEXT 3 MINUTES' to expand this bit.")
+            if local_ref_mode: instructions.append(f"Suggest specific local references for {city}.")
             
             instr_str = " ".join(instructions)
             venue_str = ", ".join(sel_venues)
             aud_str = ", ".join(sel_audiences)
             age_str = ", ".join(sel_ages)
 
+            # --- THE LOGIC BLOCK ---
             if not bit_text.strip() and coach_mode:
                 prompt = f"ACT AS A COMEDY WRITING PARTNER. {instr_str} Suggest 5 premises for: VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city}"
                 spinner_msg = f"Brainstorming {city} ideas..."
             else:
+                # THIS IS THE BLOCK THAT WAS BROKEN
+                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {instr_str} VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city} | BIT: {bit_text}"
+                spinner_msg = "Simulating and Expanding..."
+
+            with st.spinner(spinner_msg):
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config=config
+                )
+                st.session_state['last_response'] = response.text
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
+                st.session_state['last_city'] = city
+                
+                st.markdown("---")
+                st.markdown(response.text)
+                if "100%" in response.text: st.balloons()
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Error: {e}")
+    else:
+        st.warning("Please select Venue, Audience, and Age in the sidebar!")
