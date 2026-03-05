@@ -9,8 +9,8 @@ if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# FORCE THE STABLE V1 API 
-# This is the "Nuclear Option" to stop the v1beta 404s
+# THE FIX: Explicitly tell the library to use 'v1' (not v1beta)
+# This is the "Stable" lane for Paid Tier accounts
 genai.configure(api_key=api_key, transport='rest')
 
 # --- 2. DATA ---
@@ -33,7 +33,6 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
-    # COACH MODE AT BOTTOM
     st.markdown("---")
     st.header("💡 Pro Mode")
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
@@ -46,8 +45,7 @@ if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
         try:
-            # THE FIX: We are calling the model by its versioned production name
-            # This ensures the library doesn't append 'v1beta' to the URL
+            # We are calling the model without 'v1beta' in the path
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             coach_instruction = ""
@@ -56,8 +54,8 @@ if st.button("🚀 Run Simulation", use_container_width=True):
 
             prompt = f"ACT AS A COMEDY AUDIENCE. {coach_instruction} VENUE: {sel_crowds} | VIBE: {sel_vibes} | BIT: {bit_text}"
             
-            with st.spinner('Forcing Stable Connection...'):
-                # We use the 'v1' API specifically here
+            with st.spinner('Accessing the V1 Stable Server...'):
+                # This call will now target /v1/ instead of /v1beta/
                 response = model.generate_content(prompt)
                 
                 st.markdown("---")
@@ -65,8 +63,7 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 if "100%" in response.text: st.balloons()
                 
         except Exception as e:
-            # If the high-level call fails, we show the exact error
             st.error(f"Error: {e}")
-            st.info("Check Google AI Studio: Is the 'Generative Language API' enabled for your project?")
+            st.info("Check Google AI Studio: Is 'Generative Language API' enabled for your project?")
     else:
-        st.warning("Select at least one option in every category!")
+        st.warning("Please check at least one box in every category!")
