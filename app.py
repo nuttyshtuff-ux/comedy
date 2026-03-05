@@ -16,24 +16,32 @@ CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
-# --- 3. SIDEBAR ---
+# --- 3. SIDEBAR (With Headers Restored) ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     city = st.text_input("City", value="San Luis Obispo")
+    
+    st.markdown("---")
+    st.header("1. The Audience")
     sel_crowds = [c for c in CROWDS if st.checkbox(c, key=f"c_{c}")]
+    
+    st.header("2. Age Range")
     sel_ages = [a for a in AGES if st.checkbox(a, key=f"a_{a}")]
+    
+    st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
 # --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300)
+st.markdown(f"**Current Stage:** Live from {city}")
+
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Testing for laughs...")
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        # TRIAGE: Try the most stable production models
-        # Using 1.5-pro as the primary for Paid Tier stability
-        models_to_try = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro']
+        # Using 1.5-pro for Tier 1 stability
+        models_to_try = ['gemini-1.5-pro', 'gemini-1.5-flash']
         
         success = False
         last_error = ""
@@ -43,21 +51,21 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             try:
                 model = genai.GenerativeModel(model_name=m_name)
                 prompt = f"""
-                Analyze this comedy bit for a {city} crowd.
-                AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
+                You are a Professional Comedy Simulation Engine.
+                VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
                 
                 BIT:
                 {bit_text}
                 
-                OUTPUT:
-                1. THE ROOM SOUND
-                2. AUDIENCE PERSONAS
-                3. IS IT FUNNY? (Blunt assessment)
-                4. SCORECARD (Laughter %, Tension %, Kill Probability %)
-                5. THE TAG
+                RESPONSE STRUCTURE:
+                1. THE ROOM SOUND: (Literal noise/atmosphere)
+                2. AUDIENCE PERSONAS: (3 distinct reactions based on age/venue)
+                3. IS IT FUNNY?: (Blunt assessment of the humor)
+                4. SCORECARD: Laughter %, Tension %, Kill Probability %
+                5. THE TAG: (One short, sharp line to boost or save the bit)
                 """
                 
-                with st.spinner(f'Consulting {m_name}...'):
+                with st.spinner(f'Opening the room with {m_name}...'):
                     response = model.generate_content(
                         prompt,
                         safety_settings=[
@@ -75,6 +83,5 @@ if st.button("🚀 Run Simulation", use_container_width=True):
         
         if not success:
             st.error(f"Handshake Error: {last_error}")
-            st.info("Check Google AI Studio to ensure your 'Paid' status is fully active.")
     else:
-        st.warning("Check at least one box in every sidebar category!")
+        st.warning("Please check at least one box in every category (Audience, Age, and Vibe)!")
