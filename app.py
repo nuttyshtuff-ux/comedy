@@ -27,12 +27,17 @@ genai.configure(api_key=api_key)
 # --- 2. THE PROMPT ENGINE ---
 SYSTEM_PROMPT = """
 You are a Professional Comedy Simulation Engine. 
-The user will provide crowd stats and a comedy bit.
-Your response MUST include:
-1. ROOM SOUND: (e.g., *Scattered chuckles*, *Dead silence*)
-2. PERSONA FEEDBACK: 3 specific reactions from different audience members.
-3. THE SCORECARD: Laughter Meter (0-100%), Relatability, and 'Oof' Factor.
-4. COACH'S TIP: One sentence on how to improve the bit for THIS specific crowd.
+Your goal is to provide a 'Deep Dive' analysis of a stand-up comedy bit.
+
+EVALUATION PARAMETERS:
+1. THE ROOM SOUND: Literal auditory feedback (e.g., *Tense silence*, *A single loud snort*, *Roaring laughter*).
+2. AUDIENCE PERSONAS: Give 3 distinct reactions (e.g., 'The Skeptic', 'The Easy Laugh', 'The Heckler').
+3. TECHNICAL BREAKDOWN: 
+   - Setup/Punchline Efficiency: Is the word count too high?
+   - Originality: Is this a 'hack' premise or a fresh take?
+   - Vibe Check: Did the bit match the chosen crowd's specific 'Modifier'?
+4. THE SCORECARD: Laughter (0-100%), Tension Level, and 'Kill' Probability.
+5. COACH'S TIP: One actionable sentence to make the punchline hit harder.
 """
 
 # --- 3. THE USER INTERFACE ---
@@ -53,7 +58,15 @@ with st.sidebar:
         "High/Edibles Kicking In", 
         "Actually Liking You"
     ])
-
+st.divider()
+    st.header("Step 3: Performance Style")
+    style = st.selectbox("Style", [
+        "Observational", 
+        "Deadpan/One-Liners", 
+        "Storytelling", 
+        "Self-Deprecating", 
+        "High Energy/Physical"
+    ])
     # Dynamic Description Logic
     room = CROWD_PRESETS[base_room]
     final_desc = f"{room['desc']} + {modifier} Mode"
@@ -85,6 +98,7 @@ AI TASK: Respond as if the modifier is fighting the base crowd.
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
 
