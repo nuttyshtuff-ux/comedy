@@ -5,24 +5,29 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# --- REFINED CSS (Keeps Mobile Menu, Hides Branding) ---
+# --- REFINED CSS (Total Branding Removal while KEEPING Sidebar Toggle) ---
 st.markdown("""
     <style>
-    /* 1. Hide the "Made with Streamlit" footer */
+    /* 1. Kill the 'Made with Streamlit' footer */
     footer {visibility: hidden;}
     
-    /* 2. Hide the "Deploy" button and the 'Developer' clutter */
+    /* 2. Hide only the specific branding elements in the header */
+    /* This targets the Deploy button and the small app status icon */
     .stAppDeployButton {display:none !important;}
-    [data-testid="stToolbar"] {display:none !important;}
+    [data-testid="stStatusWidget"] {display:none !important;}
     
-    /* 3. Keep the header but remove the red/decoration bar */
+    /* 3. Hide the 'three dots' menu on the right, but keep the header for the sidebar button */
+    #MainMenu {visibility: hidden;}
+    
+    /* 4. Remove the top red/decoration bar */
     [data-testid="stDecoration"] {display:none !important;}
 
-    /* 4. Mobile font fix: Prevent auto-zoom on iOS */
+    /* 5. Mobile font fix: Prevent auto-zoom on iOS */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     
-    /* 5. Clean up the sidebar top padding */
+    /* 6. Fix Sidebar Padding (No big blank gap at the top) */
     [data-testid="stSidebarNav"] {display: none !important;}
+    [data-testid="stSidebar"] {padding-top: 2rem;}
     </style>
     """, unsafe_allow_html=True)
 
