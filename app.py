@@ -20,42 +20,29 @@ CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
-# --- 3. THE TOP UTILITY BAR (Above the Title) ---
-# Using 3 columns to fit Lock Mode, Coach Mode, and Save Session
-top_col1, top_col2, top_col3 = st.columns([1, 1, 1])
+# --- 3. THE SLIM TOP BAR ---
+# Using 5 columns and leaving the outside ones empty to "squeeze" the controls
+_, c1, c2, c3, _ = st.columns([1, 2, 2, 2, 1])
 
-with top_col1:
-    lock_mode = st.checkbox("Lock Structure", value=True)
-    st.caption("Keep responses consistent")
+with c1:
+    lock_mode = st.checkbox("Lock Structure", value=True, help="Keep responses consistent")
 
-with top_col2:
-    coach_mode = st.checkbox("Coach Mode", value=False)
-    st.caption("Get advice or writing prompts")
+with c2:
+    coach_mode = st.checkbox("Coach Mode", value=False, help="Advice or writing prompts")
 
-with top_col3:
+with c3:
     if "last_response" in st.session_state:
-        # Generate the text data for the download
-        city_val = st.session_state.get('last_city', 'Unknown')
-        session_text = f"CITY: {city_val}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
-        
-        st.download_button(
-            label="💾 Download Session",
-            data=session_text,
-            file_name=f"comedy_session.txt",
-            use_container_width=True
-        )
+        session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
+        st.download_button("💾 Download", data=session_text, file_name="comedy_session.txt", use_container_width=True)
     else:
-        st.button("💾 Save Session", disabled=True, use_container_width=True)
-        st.caption("Run a simulation first")
-
-st.markdown("---")
+        st.button("💾 Save", disabled=True, use_container_width=True)
 
 # --- 4. MAIN TITLE & INPUT ---
 st.title("🎤 Comedy Crowd Sim")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Drop your bit here...")
+bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here...")
 
-# --- 5. SIDEBAR (The Room Settings) ---
+# --- 5. SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     city = st.text_input("City", value="San Luis Obispo")
@@ -86,7 +73,7 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 prompt = f"ACT AS A COMEDY WRITING PARTNER. Suggest 5 premises for: VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city}"
                 spinner_msg = f"Fetching {city} premises..."
             else:
-                coach_instruction = f"Include a 'COACH'S CORNER' for {sel_ages} in {sel_crowds}." if coach_mode else ""
+                coach_instruction = "Include a 'COACH'S CORNER' feedback section." if coach_mode else ""
                 prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instruction} VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes} | CITY: {city} | BIT: {bit_text}"
                 spinner_msg = "Simulating the room..."
 
@@ -96,7 +83,6 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                     contents=prompt,
                     config=config
                 )
-                # Store data for the Download button in the top bar
                 st.session_state['last_response'] = response.text
                 st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
                 st.session_state['last_city'] = city
@@ -109,4 +95,4 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Please check at least one box in every category in the sidebar!")
+        st.warning("Please select Audience, Age, and Vibe in the sidebar!")
