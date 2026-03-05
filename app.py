@@ -15,8 +15,13 @@ client = genai.Client(
     http_options={'api_version': 'v1'}
 )
 
-# --- 2. DATA ---
-CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night"]
+# --- 2. UPDATED DATA ---
+CROWDS = [
+    "Underground Comedy", "The Comedy Shop", "Don't Tell", 
+    "The College Gig", "Dive Bar", "Upscale Bar", 
+    "Comedy Showcase", "Open Mic Night", 
+    "Local Craft Brewery", "Wine Bar" # <-- Added these
+]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 
@@ -38,7 +43,6 @@ with c2:
     )
 
 with c3:
-    # UPDATED TOOLTIP FOR SAVE/DOWNLOAD
     save_help = "Download a .txt file containing your joke, the room settings, and the simulation results."
     if "last_response" in st.session_state:
         session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
