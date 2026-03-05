@@ -39,48 +39,42 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="The AI 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        models_to_try = ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash']
+        # Use the most robust stable model for Tier 1
+        model_name = 'gemini-2.0-flash'
         
         # Safety settings (BLOCK_NONE allows for edgy comedy content)
         safety = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"}
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
         
-        success = False
-        for m_name in models_to_try:
-            if success: break
-            try:
-                model = genai.GenerativeModel(model_name=m_name, safety_settings=safety)
-                
-                # CRITICAL FOCUS: IS IT FUNNY?
-                prompt = f"""
-                You are a Professional Comedy Simulation Engine.
-                VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
-                
-                BIT:
-                {bit_text}
-                
-                RESPONSE STRUCTURE:
-                1. THE ROOM SOUND: (Literal background noise, laughter levels, or awkward silence)
-                2. AUDIENCE PERSONAS: (3 distinct reactions—who laughed, who stared, and who checked their phone?)
-                3. WHY IT LANDED (OR FAILED): (A blunt assessment of the humor based on the generational and venue context.)
-                4. SCORECARD: Laughter %, Tension %, Kill Probability %
-                5. THE TAG: (Suggest one short, sharp 'tag' to save or boost the bit.)
-                """
-                
-                with st.spinner(f'Checking if it kills...'):
-                    response = model.generate_content(prompt)
-                    st.success(f"Simulation Complete")
-                    st.markdown("---")
-                    st.markdown(response.text)
-                    if "100%" in response.text: st.balloons()
-                    success = True
-            except Exception as e:
-                last_error = str(e)
-                continue
-        
-        if not success:
-            st.error(f"System Error: {last_error}")
+        try:
+            model = genai.GenerativeModel(model_name=model_name, safety_settings=safety)
+            
+            prompt = f"""
+            You are a Professional Comedy Simulation Engine.
+            VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
+            
+            BIT:
+            {bit_text}
+            
+            RESPONSE STRUCTURE:
+            1. THE ROOM SOUND: (Literal background noise, laughter levels, or awkward silence)
+            2. AUDIENCE PERSONAS: (3 distinct reactions—who laughed, who stared, and who checked their phone?)
+            3. WHY IT LANDED (OR FAILED): (A blunt assessment of the humor based on the generational and venue context.)
+            4. SCORECARD: Laughter %, Tension %, Kill Probability %
+            5. THE TAG: (Suggest one short, sharp 'tag' to save or boost the bit.)
+            """
+            
+            with st.spinner(f'Consulting {model_name}...'):
+                response = model.generate_content(prompt)
+                st.markdown("---")
+                st.markdown(response.text)
+                if "100%" in response.text: st.balloons()
+        except Exception as e:
+            st.error(f"System Error: {e}")
+            st.info("Since you just upgraded to Tier 1, ensure your billing account is active in Google Cloud Console.")
     else:
         st.error("Setup incomplete! Select at least one Audience, Age, and Vibe.")
