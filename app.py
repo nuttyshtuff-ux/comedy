@@ -1,6 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
-from google.generativeai.types import RequestOptions
+from google import genai
+from google.genai import types
 
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
@@ -10,8 +10,8 @@ if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# Force the stable REST transport
-genai.configure(api_key=api_key, transport='rest')
+# Initialize the NEW client (this uses the modern API by default)
+client = genai.Client(api_key=api_key)
 
 # --- 2. DATA ---
 CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night"]
@@ -39,17 +39,14 @@ with st.sidebar:
 
 # --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Wait for the rebuild, then paste your bit...")
+bit_text = st.text_area("Paste your set here:", height=300)
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         try:
-            # This 'gemini-1.5-flash' call will now be forced to the Stable v1 endpoint
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
             coach_instruction = ""
             if coach_mode:
-                coach_instruction = f"Include a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}."
+                coach_instruction = f"Provide a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}."
 
             prompt = f"""
             ACT AS A COMEDY AUDIENCE SIMULATOR. 
@@ -66,18 +63,19 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             5. THE TAG
             """
             
-            with st.spinner('Accessing the V1 Stable Production Server...'):
-                # THE KEY COMMAND: This requires the updated library
-                response = model.generate_content(
-                    prompt,
-                    request_options=RequestOptions(api_version='v1')
+            with st.spinner('Accessing the Modern Production API...'):
+                # Using the NEW SDK syntax
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=prompt
                 )
+                
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
                 
         except Exception as e:
             st.error(f"Error: {e}")
-            st.info("If you see an error about 'RequestOptions', Streamlit is still finishing the library update. Give it 60 seconds.")
+            st.info("If you see 'ModuleNotFoundError', Streamlit is still installing the new 'google-genai' library. Give it a minute.")
     else:
         st.warning("Please check at least one box in every category!")
