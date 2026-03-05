@@ -2,38 +2,13 @@ import streamlit as st
 import google.generativeai as genai
 
 CROWD_PRESETS = {
-    "The College Gig": {
-        "size": 25,
-        "age": "Gen Z",
-        "vibe": "Encouraging but Naive",
-        "desc": "12-year-olds with TikTok brain."
-    },
-    "The Biker Bar": {
-        "size": 40,
-        "age": "Gen X",
-        "vibe": "Drunk/Rowdy",
-        "desc": "Leather jackets and zero patience."
-    },
-    "The Corporate Breakfast": {
-        "size": 100,
-        "age": "Millennial",
-        "vibe": "Corporate/Cold",
-        "desc": "8 AM, no coffee, looking for a reason to HR you."
-    },
-    "The Open Mic Night": {
-        "size": 15,
-        "age": "Mixed",
-        "vibe": "Open Mic Comics",
-        "desc": "Just 10 guys waiting for their turn to talk."
-    }
-CROWD_PRESETS = {
     "The College Gig": {"size": 25, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "TikTok attention spans."},
     "The Biker Bar": {"size": 40, "age": "Gen X", "vibe": "Drunk/Rowdy", "desc": "Leather and zero patience."},
-    "The VFW Hall": {"size": 30, "age": "Boomer", "vibe": "Corporate/Cold", "desc": "Staring at you over a pitcher of light beer."},
-    "The Tech Mixer": {"size": 60, "age": "Millennial", "vibe": "Corporate/Cold", "desc": "Everyone is checking their Slack notifications."},
-    "The 'Last Resort'": {"size": 5, "age": "Mixed", "vibe": "Drunk/Rowdy", "desc": "Just three guys and a bartender who hates you."},
-    "The Woke Workshop": {"size": 20, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "Waiting for you to say something problematic."},
-}
+    "The VFW Hall": {"size": 30, "age": "Boomer", "vibe": "Corporate/Cold", "desc": "Staring over light beer."},
+    "The Tech Mixer": {"size": 60, "age": "Millennial", "vibe": "Corporate/Cold", "desc": "Checking Slack notifications."},
+    "The 'Last Resort'": {"size": 5, "age": "Mixed", "vibe": "Drunk/Rowdy", "desc": "Three guys and a mean bartender."},
+    "The Woke Workshop": {"size": 20, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "Waiting for a 'problematic' slip-up."},
+    "The Open Mic Night": {"size": 15, "age": "Mixed", "vibe": "Open Mic Comics", "desc": "Just comics waiting for their turn."}
 }
 st.set_page_config(
     page_title="Comedy Crowd Sim",
@@ -112,6 +87,7 @@ AI TASK: Respond as if the modifier is fighting the base crowd.
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
 
