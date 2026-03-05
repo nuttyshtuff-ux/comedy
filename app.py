@@ -6,15 +6,38 @@ st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide
 
 api_key = st.secrets.get("api_key")
 if not api_key:
-    st.error("API Key not found in Secrets! Please add your Tier 1 key.")
+    st.error("API Key not found in Secrets!")
     st.stop()
 
 genai.configure(api_key=api_key)
 
-# --- 2. DATA CONSTANTS ---
-CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "College Gig", "Biker Bar", "VFW Hall", "Tech Mixer", "Open Mic Night", "The Woke Workshop"]
-VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk 20-Somethings", "Passive", "New to Comedy", "Skeptical", "Jaded", "Friendly"]
-STYLES = ["Observational", "One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical", "Political", "Absurdist"]
+# --- 2. DATA CONSTANTS (UPDATED) ---
+CROWDS = [
+    "Underground Comedy", "The Comedy Shop", "Don't Tell", 
+    "The College Gig", "Biker Bar", "VFW Hall", 
+    "Tech Mixer", "Open Mic Night", "The Woke Workshop"
+]
+
+VIBES = [
+    "Normal", 
+    "Hostile/Heckling", 
+    "Distracted", 
+    "Drunk 20-Somethings", 
+    "Passive", 
+    "New to Comedy", 
+    "Skeptical but Hopeful", # Updated
+    "Jaded", 
+    "Friendly",
+    "Silence for No Reason", # Added
+    "Easily Offended",       # Added
+    "Chatty"                 # Added
+]
+
+STYLES = [
+    "Observational", "One-Liners", "Storytelling", 
+    "Self-Deprecating", "High Energy/Physical", 
+    "Political", "Absurdist"
+]
 
 # --- 3. SIDEBAR UI ---
 with st.sidebar:
@@ -34,7 +57,7 @@ with st.sidebar:
 st.title("🎤 Comedy Crowd Sim")
 st.markdown(f"**Current Stage:** Live from {city}")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste your jokes here for analysis...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste your jokes here...")
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_vibes and sel_styles:
@@ -58,9 +81,8 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             try:
                 model = genai.GenerativeModel(model_name=m_name, safety_settings=safety)
                 
-                # High-level prompt for nuanced comedy feedback
                 prompt = f"""
-                You are an expert Comedy Coach and Audience Simulator.
+                You are a Professional Comedy Simulation Engine. 
                 VENUE: {city}
                 AUDIENCE: {', '.join(sel_crowds)}
                 MOOD: {', '.join(sel_vibes)}
@@ -69,15 +91,12 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 BIT TO ANALYZE:
                 {bit_text}
                 
-                RESPONSE STRUCTURE:
-                1. THE ROOM SOUND: Describe the literal atmosphere and noise level.
-                2. THE AUDIENCE PERSONAS: Give 3 specific examples of how different people in the crowd react.
-                3. THE 'VIBRATION' CHECK: Analyze the energy level—where does it peak and where does it dip?
-                4. PERFORMANCE SCORECARD:
-                   - Laughter: (0-100%)
-                   - Tension: (0-100%)
-                   - Kill Probability: (0-100%)
-                5. COACH'S TAGS: Suggest 2-3 specific 'tags' (short follow-up jokes) to make the bit stronger.
+                OUTPUT STRUCTURE:
+                1. THE ROOM SOUND: (Describe the literal noise level and crowd chatter)
+                2. AUDIENCE PERSONAS: (3 distinct reactions based on the vibes selected)
+                3. ANALYSIS: (How the bit landed against 'Silence for No Reason' or 'Easily Offended' logic)
+                4. SCORECARD: Laughter %, Tension %, Kill Probability %
+                5. COACH'S TAGS: (Suggest 2-3 specific follow-up lines to keep the momentum)
                 """
                 
                 with st.spinner(f'Opening the room with {m_name}...'):
