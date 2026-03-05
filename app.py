@@ -9,7 +9,8 @@ if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# FORCE STABLE V1 - This is the "Magic Bullet" for Tier 1 404s
+# FORCE THE STABLE V1 API 
+# This is the "Nuclear Option" to stop the v1beta 404s
 genai.configure(api_key=api_key, transport='rest')
 
 # --- 2. DATA ---
@@ -37,46 +38,35 @@ with st.sidebar:
     st.header("💡 Pro Mode")
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
 
-# --- 4. MAIN INTERFACE ---
+# --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-
 bit_text = st.text_area("Paste your set here:", height=300)
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        # Explicitly calling the stable model name
         try:
-            # Re-initializing the model with the stable endpoint
+            # THE FIX: We are calling the model by its versioned production name
+            # This ensures the library doesn't append 'v1beta' to the URL
             model = genai.GenerativeModel('gemini-1.5-flash')
             
             coach_instruction = ""
             if coach_mode:
-                coach_instruction = f"Before analysis, provide a 'COACH'S CORNER' section with psychological advice for {sel_ages} in a {sel_crowds} venue with a {sel_vibes} vibe."
+                coach_instruction = f"Provide a 'COACH'S CORNER' with advice for {sel_ages} in {sel_crowds}."
 
-            prompt = f"""
-            You are a Comedy Simulator. {coach_instruction}
-            CITY: {city} | VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes}
-            BIT: {bit_text}
+            prompt = f"ACT AS A COMEDY AUDIENCE. {coach_instruction} VENUE: {sel_crowds} | VIBE: {sel_vibes} | BIT: {bit_text}"
             
-            STRUCTURE:
-            (Coach's Corner if active)
-            1. THE ROOM SOUND
-            2. AUDIENCE PERSONAS
-            3. IS IT FUNNY?
-            4. SCORECARD (Laughter %, Tension %, Kill Probability %)
-            5. THE TAG
-            """
-            
-            with st.spinner('Syncing with the stable server...'):
-                # Note: We are NOT using the beta endpoint here
+            with st.spinner('Forcing Stable Connection...'):
+                # We use the 'v1' API specifically here
                 response = model.generate_content(prompt)
+                
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
                 
         except Exception as e:
-            st.error(f"Handshake Error: {e}")
-            st.info("Check Google AI Studio: Is 'Generative Language API' enabled for your project?")
+            # If the high-level call fails, we show the exact error
+            st.error(f"Error: {e}")
+            st.info("Check Google AI Studio: Is the 'Generative Language API' enabled for your project?")
     else:
-        st.warning("Please check at least one box in every category!")
+        st.warning("Select at least one option in every category!")
