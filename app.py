@@ -59,7 +59,7 @@ with st.sidebar:
         "Actually Liking You"
     ])
 st.divider()
-    st.header("Step 3: Performance Style")
+st.header("Step 3: Performance Style")
     style = st.selectbox("Style", [
         "Observational", 
         "Deadpan/One-Liners", 
@@ -79,16 +79,16 @@ if st.button("Do the Bit"):
     if bit_text:
         model = genai.GenerativeModel('gemini-1.5-flash')
         full_query = f"""
-SCENARIO: You are simulating a comedy club crowd.
-BASE CROWD: {base_room} ({room['age']}, {room['vibe']})
-MODIFIER: {modifier}
-CONTEXT: {room['desc']}
+PERFORMANCE SIMULATION:
+Style: {style}
+Base Crowd: {base_choice}
+Modifier/State: {mod_choice} (Context: {MODIFIERS[mod_choice]})
+Crowd Size: {selected_base['size']}
 
-BIT TO EVALUATE: 
+BIT TO ANALYZE:
 {bit_text}
 
-AI TASK: Respond as if the modifier is fighting the base crowd. 
-(e.g., If it's a VFW Hall + Edibles, the Boomers are staring but slowly starting to giggle at the glow-in-the-dark Jesus.)
+Analyze the interaction between this specific {style} style and the {mod_choice} crowd.
 """
         
         with st.spinner('Waiting for the room to react...'):
@@ -98,6 +98,7 @@ AI TASK: Respond as if the modifier is fighting the base crowd.
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
 
