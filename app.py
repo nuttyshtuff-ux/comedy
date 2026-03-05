@@ -5,30 +5,24 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# --- CSS TO HIDE BRANDING & OPTIMIZE MOBILE ---
+# --- REFINED CSS (Keeps Mobile Menu, Hides Branding) ---
 st.markdown("""
     <style>
-    /* Hide the Streamlit "Made with Streamlit" footer */
+    /* 1. Hide the "Made with Streamlit" footer */
     footer {visibility: hidden;}
     
-    /* Hide the header/hamburger menu if you want total immersion */
-    header {visibility: hidden;}
+    /* 2. Hide the "Deploy" button and the 'Developer' clutter */
+    .stAppDeployButton {display:none !important;}
+    [data-testid="stToolbar"] {display:none !important;}
     
-    /* Remove the top red/decoration bar */
-    .stAppDeployButton {display:none;}
-    [data-testid="stDecoration"] {display:none;}
+    /* 3. Keep the header but remove the red/decoration bar */
+    [data-testid="stDecoration"] {display:none !important;}
 
-    /* Mobile font fix: Prevent auto-zoom on iOS */
+    /* 4. Mobile font fix: Prevent auto-zoom on iOS */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     
-    /* Make the Run button pop */
-    .stButton button {
-        height: 3.5em;
-        border-radius: 10px;
-        background-color: #FF4B4B; /* Optional: SLO Red vibe */
-        color: white;
-        font-weight: bold;
-    }
+    /* 5. Clean up the sidebar top padding */
+    [data-testid="stSidebarNav"] {display: none !important;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -115,5 +109,3 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
 if "last_response" in st.session_state:
     st.markdown("---")
     st.markdown(st.session_state['last_response'])
-    if "100%" in st.session_state['last_response']:
-        st.balloons()
