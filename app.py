@@ -4,101 +4,60 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# Retrieve API key
 api_key = st.secrets.get("api_key")
 if not api_key:
-    st.error("API Key missing! Check your Streamlit Secrets.")
+    st.error("API Key missing! Check Streamlit Secrets.")
     st.stop()
 
 genai.configure(api_key=api_key)
 
 # --- 2. DATA ---
-CROWD_PRESETS = {
-    "Underground Comedy": "Basement vibe, raw energy, hipsters/nerds.",
-    "The Comedy Shop (The Store)": "Industry pressure, pitch-black room, high expectations.",
-    "Don't Tell Comedy": "Pop-up/Secret location, focused house-party vibe.",
-    "The College Gig": "Gen Z, TikTok attention spans, energetic.",
-    "The Biker Bar": "Gen X, leather, heavy drinkers, zero patience.",
-    "The VFW Hall": "Boomers, staring over light beer, very literal.",
-    "The Tech Mixer": "Millennials, checking Slack, skeptical.",
-    "The 'Last Resort'": "Three guys and a mean bartender.",
-    "The Woke Workshop": "Hyper-sensitive, waiting for a slip-up.",
-    "The Open Mic Night": "Comics waiting for their turn."
-}
+CROWD_MIX = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "College Gig", "Biker Bar", "VFW Hall", "Tech Mixer", "Open Mic"]
+CROWD_VIBE = ["Normal", "Hostile", "Drunk 20s", "Passive", "Jaded", "Friendly"]
+STYLES = ["Observational", "One-Liners", "Storytelling", "Self-Deprecating", "Physical", "Political"]
 
-MODIFIERS = {
-    "Normal": "Standard night.",
-    "Hostile/Heckling": "Aggressively seeking a reason to boo.",
-    "Distracted by Sports": "Eyes on the TV; you have to fight for attention.",
-    "Drunk 20-Somethings": "Rowdy, shouting out, loud but short attention spans.",
-    "Passive": "Arms folded, internal laughs only.",
-    "New to Live Comedy": "Don't know the etiquette; might be too quiet.",
-    "Skeptical but Hopeful": "They've seen bad acts; prove you aren't one.",
-    "Jaded": "They know every setup; hard to surprise.",
-    "Actually Liking You": "A rare 'Friendly' room."
-}
-
-STYLES = ["Observational", "One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical", "Political", "Absurdist"]
-
-# --- 3. SIDEBAR UI ---
+# --- 3. SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    city_choice = st.text_input("Enter City or Venue", value="San Luis Obispo")
-    
-    st.header("1. Crowd Mix")
-    selected_crowds = [c for c in CROWD_PRESETS.keys() if st.checkbox(c)]
-    
-    st.header("2. Crowd States")
-    selected_mods = [m for m in MODIFIERS.keys() if st.checkbox(m)]
-    
-    st.header("3. Performance Styles")
-    selected_styles = [s for s in STYLES if st.checkbox(s)]
+    city = st.text_input("City/Venue", value="San Luis Obispo")
+    sel_crowds = [c for c in CROWD_MIX if st.checkbox(c)]
+    sel_vibes = [v for v in CROWD_VIBE if st.checkbox(v)]
+    sel_styles = [s for s in STYLES if st.checkbox(s)]
 
-# --- 4. MAIN INTERFACE ---
+# --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"### *Live from {city_choice}...*")
+bit_text = st.text_area("Paste your set here:", height=250)
 
-bit_text = st.text_area("Paste your set here:", placeholder="Paste your bit...", height=250)
-
-if st.button("Do the Set"):
-    if bit_text and selected_crowds and selected_mods and selected_styles:
+if st.button("Run Simulation"):
+    if bit_text and sel_crowds and sel_vibes and sel_styles:
         
-        crowd_desc = ", ".join(selected_crowds)
-        mod_desc = ", ".join(selected_mods)
-        style_desc = ", ".join(selected_styles)
-
-        SYSTEM_PROMPT = f"Analyze this comedy bit for a {city_choice} crowd. CROWD: {crowd_desc}. VIBE: {mod_desc}. STYLE: {style_desc}. Provide: 1. Room Sound, 2. Audience Personas, 3. Scorecard (Laughter/Kill Prob), 4. Coach's Tip."
-
-        # SAFETY SETTINGS
-        safety_settings = [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-        ]
-
-        # TRIAGE LOGIC: Try every possible model name variation
+        # 2026 STABLE MODELS
+        # Note: 'gemini-2.5-flash' is the new industry standard
+        models_to_try = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash']
+        
         success = False
-        # These are the most common supported strings for billing-enabled keys
-        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-        
-        last_error = ""
-        for model_name in models_to_try:
-            if success: break
+        for m_name in models_to_try:
             try:
-                model = genai.GenerativeModel(model_name=model_name, safety_settings=safety_settings)
-                with st.spinner(f'Trying {model_name}...'):
-                    response = model.generate_content([SYSTEM_PROMPT, bit_text])
+                model = genai.GenerativeModel(m_name)
+                prompt = f"Simulate a {city} audience reaction. Crowd: {sel_crowds}. Vibe: {sel_vibes}. Style: {sel_styles}. BIT: {bit_text}"
+                
+                with st.spinner(f'Opening doors for {m_name}...'):
+                    response = model.generate_content(prompt)
                     st.markdown("---")
                     st.markdown(response.text)
-                    if "100%" in response.text: st.balloons()
                     success = True
-            except Exception as e:
-                last_error = str(e)
+                    break
+            except Exception:
                 continue
         
         if not success:
-            st.error(f"Models are still activating: {last_error}")
-            st.info("Wait 2 minutes and try again. Google is currently linking your billing to the API models.")
+            st.error("Model Handshake Failed.")
+            st.write("### Diagnostic: Your Key supports these models:")
+            try:
+                # This lists what your SPECIFIC key is allowed to do
+                available = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                st.write(available)
+            except:
+                st.write("Could not retrieve model list. Check your billing status at ai.google.dev.")
     else:
-        st.error("Setup incomplete!")
+        st.error("Select at least one checkbox in each category!")
