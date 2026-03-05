@@ -84,4 +84,38 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type yo
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if city.strip() and sel_venues:
         try:
-            current_temp = 0.1 if
+            # FIX FOR LINE 87:
+            current_temp = 0.1 if lock_mode else 0.7
+            
+            config = types.GenerateContentConfig(
+                temperature=current_temp, 
+                top_p=0.95, 
+                max_output_tokens=3000
+            )
+
+            instructions = []
+            if coach_mode: instructions.append("- Provide a 'COACH'S CORNER' feedback section.")
+            if extend_mode: instructions.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
+            if local_ref_mode: instructions.append(f"- Provide 5 specific local references for {city}.")
+            
+            instr_str = "\n".join(instructions)
+            venue_str = ", ".join(sel_venues)
+            aud_str = ", ".join(sel_audiences) if sel_audiences else "Mixed"
+            age_str = ", ".join(sel_ages) if sel_ages else "All Ages"
+
+            if not bit_text.strip():
+                prompt = f"ACT AS A COMEDY WRITING PARTNER. You MUST provide EXACTLY 5 distinct comedy premises for {city} at {venue_str}. Audience: {aud_str} | Age: {age_str}. {instr_str}\nSTRUCTURE: 1. PREMISE 1, 2. PREMISE 2, 3. PREMISE 3, 4. PREMISE 4, 5. PREMISE 5, 6. ADDITIONAL SECTIONS."
+            else:
+                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate this bit: '{bit_text}' for {city} | {venue_str} | {aud_str} | {age_str}. {instr_str}"
+
+            with st.spinner("Processing..."):
+                response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt, config=config)
+                st.session_state['last_response'] = response.text
+                st.session_state['last_city'] = city
+                st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Error: {e}")
+    else:
+        st.warning("Please select City and Venue in the sidebar!")
