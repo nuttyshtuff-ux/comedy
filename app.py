@@ -11,11 +11,18 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# --- 2. DATA CONSTANTS (UPDATED) ---
+# --- 2. DATA CONSTANTS (REFINED AUDIENCES) ---
 CROWDS = [
-    "Underground Comedy", "The Comedy Shop", "Don't Tell", 
-    "The College Gig", "Biker Bar", "VFW Hall", 
-    "Tech Mixer", "Open Mic Night", "The Woke Workshop"
+    "Underground Comedy", 
+    "The Comedy Shop", 
+    "Don't Tell", 
+    "The College Gig", 
+    "Dive Bar",          # Added
+    "Upscale Bar",       # Added
+    "Comedy Showcase",   # Added
+    "VFW Hall", 
+    "Tech Mixer", 
+    "Open Mic Night"
 ]
 
 VIBES = [
@@ -25,12 +32,12 @@ VIBES = [
     "Drunk 20-Somethings", 
     "Passive", 
     "New to Comedy", 
-    "Skeptical but Hopeful", # Updated
+    "Skeptical but Hopeful", 
     "Jaded", 
     "Friendly",
-    "Silence for No Reason", # Added
-    "Easily Offended",       # Added
-    "Chatty"                 # Added
+    "Silence for No Reason", 
+    "Easily Offended",       
+    "Chatty"                 
 ]
 
 STYLES = [
@@ -92,11 +99,11 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 {bit_text}
                 
                 OUTPUT STRUCTURE:
-                1. THE ROOM SOUND: (Describe the literal noise level and crowd chatter)
-                2. AUDIENCE PERSONAS: (3 distinct reactions based on the vibes selected)
-                3. ANALYSIS: (How the bit landed against 'Silence for No Reason' or 'Easily Offended' logic)
+                1. THE ROOM SOUND: (Describe the literal noise level, background chatter, and acoustics)
+                2. AUDIENCE PERSONAS: (3 distinct reactions based on the specific venue types and vibes)
+                3. ANALYSIS: (How the bit landed—did it feel too 'Dive Bar' for an 'Upscale' room?)
                 4. SCORECARD: Laughter %, Tension %, Kill Probability %
-                5. COACH'S TAGS: (Suggest 2-3 specific follow-up lines to keep the momentum)
+                5. COACH'S TAGS: (Suggest 2-3 specific follow-up lines or punch-ups)
                 """
                 
                 with st.spinner(f'Opening the room with {m_name}...'):
