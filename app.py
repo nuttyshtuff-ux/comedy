@@ -4,13 +4,12 @@ import google.generativeai as genai
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# This will now pull from your NEW API key in the NEW project
 api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# Force the stable production configuration
+# Force the stable production configuration for Tier 1
 genai.configure(api_key=api_key, transport='rest')
 
 # --- 2. DATA ---
@@ -22,6 +21,11 @@ VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to
 with st.sidebar:
     st.title("🎤 Room Setup")
     city = st.text_input("City", value="San Luis Obispo")
+    
+    st.markdown("---")
+    # THE NEW COACH ADDITION
+    st.header("💡 Pro Mode")
+    coach_mode = st.checkbox("Coach Me on This Room", value=False, help="Get advice on how to play this specific demographic.")
     
     st.markdown("---")
     st.header("1. The Audience")
@@ -37,33 +41,44 @@ with st.sidebar:
 st.title("🎤 Comedy Crowd Sim")
 st.markdown(f"**Current Stage:** Live from {city}")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="The AI will simulate the room and tell you if it actually lands...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Testing for laughs...")
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        # Use the most stable Tier 1 model name
+        # Using the stable Tier 1 model name
         model_name = 'gemini-1.5-flash' 
         
         try:
             model = genai.GenerativeModel(model_name)
             
+            # Dynamic prompt based on Coach Mode
+            coach_instruction = ""
+            if coach_mode:
+                coach_instruction = f"""
+                COACHING MODE ACTIVE: 
+                Before the analysis, provide a section called 'COACH'S CORNER'. 
+                In this section, explain the specific psychological challenges of performing for {', '.join(sel_ages)} in a {', '.join(sel_crowds)} setting with a {', '.join(sel_vibes)} vibe. 
+                Tell the comic exactly how to adjust their energy, timing, or vocabulary to win this specific room.
+                """
+
             prompt = f"""
-            You are a Professional Comedy Simulation Engine.
-            VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
+            You are a Professional Comedy Simulation Engine and Mentor.
+            {coach_instruction}
             
-            BIT:
-            {bit_text}
+            VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
+            BIT: {bit_text}
             
             RESPONSE STRUCTURE:
-            1. THE ROOM SOUND: (Literal background noise, laughter levels, or awkward silence)
-            2. AUDIENCE PERSONAS: (3 distinct reactions—who laughed, who stared, and who checked their phone?)
-            3. IS IT FUNNY?: (A blunt assessment of the humor based on the generational and venue context.)
+            (If Coach Mode Active, START with 'COACH'S CORNER')
+            1. THE ROOM SOUND: (Literal background noise and laughter levels)
+            2. AUDIENCE PERSONAS: (3 distinct reactions based on age/venue)
+            3. IS IT FUNNY?: (A blunt, honest assessment of the humor)
             4. SCORECARD: Laughter %, Tension %, Kill Probability %
-            5. THE TAG: (Suggest one short, sharp 'tag' to save or boost the bit.)
+            5. THE TAG: (One short, sharp line to boost or save the bit)
             """
             
-            with st.spinner(f'Checking the room via {model_name}...'):
+            with st.spinner(f'Simulating the room via {model_name}...'):
                 # Safety settings set to BLOCK_NONE so edgy content isn't censored
                 response = model.generate_content(
                     prompt,
@@ -78,6 +93,5 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 
         except Exception as e:
             st.error(f"Handshake Error: {e}")
-            st.info("If you just enabled billing, it may take 10-30 minutes for the API key to activate.")
     else:
         st.warning("Please check at least one box in every category (Audience, Age, and Vibe)!")
