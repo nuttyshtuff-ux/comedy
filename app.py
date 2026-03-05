@@ -16,68 +16,46 @@ client = genai.Client(
 )
 
 # --- 2. DATA ---
-VENUES = [
-    "Underground Comedy", "The Comedy Shop", "Don't Tell", 
-    "The College Gig", "Dive Bar", "Upscale Bar", 
-    "Comedy Showcase", "Open Mic Night", 
-    "Local Craft Brewery", "Wine Bar",
-    "Opening for a Big Name"
-]
-AUDIENCES = [
-    "Normal", "Hostile/Heckling", "Distracted", "Drunk", 
-    "Passive", "New to Comedy", "Skeptical but Hopeful", 
-    "Jaded", "Friendly", "Silence for No Reason", 
-    "Easily Offended", "Chatty", "Other Comics Watching"
-]
+VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Opening for a Big Name"]
+AUDIENCES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
-# --- 3. THE SLIM TOP BAR ---
-_, c1, c2, c3, _ = st.columns([1, 2, 2, 2, 1])
+# --- 3. THE SLIM TOP BAR (Now with Local References) ---
+# Adjusted column ratios to fit 4 elements (3 toggles + 1 button)
+c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
 
 with c1:
-    lock_mode = st.checkbox(
-        "Lock Structure", 
-        value=True, 
-        help="✅ Checked: Precise, reliable feedback format. ❌ Unchecked: Creative, unpredictable 'wildcard' responses."
-    )
+    lock_mode = st.checkbox("Lock Structure", value=True, help="✅ Checked: Precise feedback. ❌ Unchecked: Creative variations.")
 
 with c2:
-    coach_mode = st.checkbox(
-        "Coach Mode", 
-        value=False, 
-        help="Paste a joke for a critique, or leave blank for 5 premise suggestions for this room."
-    )
+    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
 
 with c3:
-    save_help = "Download a .txt file of your joke, settings, and results."
+    # THE NEW LOCAL REF TOGGLE
+    local_ref_mode = st.checkbox("Local Refs", value=False, help=f"Inject specific landmarks, culture, and inside jokes for the selected city.")
+
+with c4:
     if "last_response" in st.session_state:
         session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
-        st.download_button("💾 Download", data=session_text, file_name="comedy_session.txt", use_container_width=True, help=save_help)
+        st.download_button("💾 Download", data=session_text, file_name="comedy_session.txt", use_container_width=True)
     else:
-        st.button("💾 Save", disabled=True, use_container_width=True, help=save_help)
+        st.button("💾 Save", disabled=True, use_container_width=True)
 
-# --- 4. MAIN TITLE & INPUT ---
+# --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
+bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank for premises.")
 
-bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank with 'Coach Mode' on for premises.")
-
-# --- 5. SIDEBAR (Updated Labels & Order) ---
+# --- 5. SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City for the Local Vibe")
     
     st.markdown("---")
-    
-    # 1. THE VENUE
     st.header("1. The Venue")
     sel_venues = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
-    
-    # 2. THE AUDIENCE
     st.header("2. The Audience")
     sel_audiences = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-    
-    # 3. AGE RANGE
     st.header("3. Age Range")
     sel_ages = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
@@ -92,17 +70,17 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 max_output_tokens=2048, 
             )
 
-            # Map selection to strings for the prompt
-            venue_str = ", ".join(sel_venues)
-            aud_str = ", ".join(sel_audiences)
-            age_str = ", ".join(sel_ages)
+            # Logic for Local References
+            local_instruction = ""
+            if local_ref_mode:
+                local_instruction = f"IMPORTANT: Suggest 3-5 specific local references, landmarks, or 'inside jokes' unique to {city} that would work for this specific venue/audience."
 
             if not bit_text.strip() and coach_mode:
-                prompt = f"ACT AS A COMEDY WRITING PARTNER. Suggest 5 premises for: VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city}"
+                prompt = f"ACT AS A COMEDY WRITING PARTNER. {local_instruction} Suggest 5 premises for: VENUE: {sel_venues} | AUDIENCE: {sel_audiences} | AGES: {sel_ages} | CITY: {city}"
                 spinner_msg = f"Fetching {city} premises..."
             else:
-                coach_instruction = "Include a 'COACH'S CORNER' feedback section." if coach_mode else ""
-                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instruction} VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city} | BIT: {bit_text}"
+                coach_instr = "Include a 'COACH'S CORNER' feedback section." if coach_mode else ""
+                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {coach_instr} {local_instruction} VENUE: {sel_venues} | AUDIENCE: {sel_audiences} | AGES: {sel_ages} | CITY: {city} | BIT: {bit_text}"
                 spinner_msg = "Simulating the room..."
 
             with st.spinner(spinner_msg):
