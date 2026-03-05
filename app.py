@@ -23,11 +23,6 @@ with st.sidebar:
     city = st.text_input("City", value="San Luis Obispo")
     
     st.markdown("---")
-    # THE NEW COACH ADDITION
-    st.header("💡 Pro Mode")
-    coach_mode = st.checkbox("Coach Me on This Room", value=False, help="Get advice on how to play this specific demographic.")
-    
-    st.markdown("---")
     st.header("1. The Audience")
     sel_crowds = [c for c in CROWDS if st.checkbox(c, key=f"c_{c}")]
     
@@ -36,6 +31,11 @@ with st.sidebar:
     
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
+
+    # --- MOVED TO BOTTOM ---
+    st.markdown("---")
+    st.header("💡 Pro Mode")
+    coach_mode = st.checkbox("Coach Me on This Room", value=False, help="Get advice on how to play this specific demographic.")
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
@@ -46,20 +46,18 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="Testing
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        # Using the stable Tier 1 model name
         model_name = 'gemini-1.5-flash' 
         
         try:
             model = genai.GenerativeModel(model_name)
             
-            # Dynamic prompt based on Coach Mode
             coach_instruction = ""
             if coach_mode:
                 coach_instruction = f"""
                 COACHING MODE ACTIVE: 
                 Before the analysis, provide a section called 'COACH'S CORNER'. 
-                In this section, explain the specific psychological challenges of performing for {', '.join(sel_ages)} in a {', '.join(sel_crowds)} setting with a {', '.join(sel_vibes)} vibe. 
-                Tell the comic exactly how to adjust their energy, timing, or vocabulary to win this specific room.
+                Explain the specific psychological challenges of performing for {', '.join(sel_ages)} in a {', '.join(sel_crowds)} setting with a {', '.join(sel_vibes)} vibe. 
+                Suggest specific adjustments to energy, timing, or vocabulary.
                 """
 
             prompt = f"""
@@ -71,15 +69,14 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             
             RESPONSE STRUCTURE:
             (If Coach Mode Active, START with 'COACH'S CORNER')
-            1. THE ROOM SOUND: (Literal background noise and laughter levels)
-            2. AUDIENCE PERSONAS: (3 distinct reactions based on age/venue)
-            3. IS IT FUNNY?: (A blunt, honest assessment of the humor)
+            1. THE ROOM SOUND
+            2. AUDIENCE PERSONAS
+            3. IS IT FUNNY? (Blunt assessment)
             4. SCORECARD: Laughter %, Tension %, Kill Probability %
             5. THE TAG: (One short, sharp line to boost or save the bit)
             """
             
             with st.spinner(f'Simulating the room via {model_name}...'):
-                # Safety settings set to BLOCK_NONE so edgy content isn't censored
                 response = model.generate_content(
                     prompt,
                     safety_settings=[
@@ -94,4 +91,4 @@ if st.button("🚀 Run Simulation", use_container_width=True):
         except Exception as e:
             st.error(f"Handshake Error: {e}")
     else:
-        st.warning("Please check at least one box in every category (Audience, Age, and Vibe)!")
+        st.warning("Please check at least one box in every category!")
