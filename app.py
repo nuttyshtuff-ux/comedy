@@ -4,32 +4,36 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# SECURE API KEY (Pulls from Streamlit Cloud Secrets)
-api_key = st.secrets.get("api_key", "YOUR_API_KEY_HERE")
+# SECURE API KEY
+api_key = st.secrets.get("api_key")
+if not api_key:
+    st.error("API Key missing! Add 'api_key' to your Streamlit Secrets.")
+    st.stop()
+
 genai.configure(api_key=api_key)
 
 # --- 2. DATA DICTIONARIES ---
 CROWD_PRESETS = {
     "Underground Comedy": "Basement/DIY vibe, raw energy, hipsters and comedy nerds.",
     "The Comedy Shop (The Store)": "Historical industry pressure, 'Passed Regular' energy, high expectations.",
-    "Don't Tell Comedy": "Pop-up/Secret location, attentive 'house party' vibe, very supportive.",
+    "Don't Tell Comedy": "Pop-up/Secret location, attentive 'house party' vibe.",
     "The College Gig": "Gen Z, TikTok attention spans, energetic.",
     "The Biker Bar": "Gen X, leather, zero patience, heavy drinkers.",
     "The VFW Hall": "Boomers, staring over light beer, very literal.",
-    "The Tech Mixer": "Millennials, checking Slack, high-income, skeptical.",
+    "The Tech Mixer": "Millennials, checking Slack, high-income.",
     "The 'Last Resort'": "Tiny crowd, three guys and a mean bartender.",
     "The Woke Workshop": "Hyper-sensitive, waiting for a problematic slip-up.",
-    "The Open Mic Night": "Room full of comics waiting for their own turn to talk."
+    "The Open Mic Night": "Room full of comics waiting for their turn."
 }
 
 MODIFIERS = {
     "Normal": "Standard night.",
     "Hostile/Heckling": "Aggressively seeking a reason to boo.",
-    "Distracted by Sports": "Eyes on the TV; you have to fight for every look.",
-    "Drunk 20-Somethings": "Rowdy, shouting out, high volume laughs but short attention spans.",
+    "Distracted by Sports": "Eyes on the TV; you have to fight for attention.",
+    "Drunk 20-Somethings": "Rowdy, shouting out, high volume but short attention spans.",
     "Passive": "The 'Arms Folded' crowd. Internal laughs only.",
-    "New to Live Comedy": "Don't know the etiquette; might be too quiet or talkative.",
-    "Skeptical but Hopeful": "They've seen bad acts tonight; prove you aren't one.",
+    "New to Live Comedy": "Don't know the etiquette; might be too quiet.",
+    "Skeptical but Hopeful": "They've seen bad acts; prove you aren't one.",
     "Jaded": "They know every setup; hard to surprise.",
     "Actually Liking You": "A rare 'Friendly' room."
 }
@@ -39,28 +43,22 @@ STYLES = ["Observational", "Deadpan/One-Liners", "Storytelling", "Self-Deprecati
 # --- 3. SIDEBAR UI ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    
-    st.header("1. Location")
     city_choice = st.text_input("Enter City or Venue", value="San Luis Obispo")
     
-    st.header("2. Crowd Mix")
+    st.header("Crowd Mix")
     selected_crowds = [c for c in CROWD_PRESETS.keys() if st.checkbox(c)]
     
-    st.header("3. Crowd States")
+    st.header("Crowd States")
     selected_mods = [m for m in MODIFIERS.keys() if st.checkbox(m)]
     
-    st.header("4. Performance Styles")
+    st.header("Performance Styles")
     selected_styles = [s for s in STYLES if st.checkbox(s)]
-
-    st.divider()
-    if not selected_crowds or not selected_mods or not selected_styles:
-        st.warning("⚠️ Select at least one item in each category!")
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"### *Simulating a set in {city_choice}...*")
+st.markdown(f"### *Live from {city_choice}...*")
 
-bit_text = st.text_area("Paste your set here:", placeholder="Paste your bits...", height=250)
+bit_text = st.text_area("Paste your set here:", height=250)
 
 if st.button("Do the Set"):
     if bit_text and selected_crowds and selected_mods and selected_styles:
@@ -70,29 +68,34 @@ if st.button("Do the Set"):
         style_desc = ", ".join(selected_styles)
 
         SYSTEM_PROMPT = f"""
-        You are a Professional Comedy Simulation Engine. Respond as an audience in {city_choice}.
+        You are a Comedy Simulation Engine. Respond as an audience in {city_choice}.
         CROWD: {crowd_desc} | VIBE: {mod_desc} | STYLE: {style_desc}
         
         OUTPUT:
-        1. THE ROOM SOUND: (Literal auditory feedback)
+        1. THE ROOM SOUND: (Auditory feedback)
         2. AUDIENCE PERSONAS: 3 distinct reactions.
-        3. LOCAL VIBE CHECK: Specific to {city_choice}.
-        4. SCORECARD: Laughter (0-100%), Tension, Kill Probability.
-        5. COACH'S TIP: One actionable improvement.
+        3. SCORECARD: Laughter (0-100%), Tension, Kill Probability.
+        4. COACH'S TIP: One actionable improvement.
         """
         
-        # UPDATED MODEL STRING TO FIX 404 ERROR
-        model = genai.GenerativeModel('models/gemini-1.5-flash')
-        
-        with st.spinner(f'Checking the room in {city_choice}...'):
-            try:
+        # FIX: Try the standard model name first
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            with st.spinner('Checking the vibe...'):
                 response = model.generate_content([SYSTEM_PROMPT, bit_text])
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
-            except Exception as e:
-                # Better error reporting
-                st.error(f"Error: {e}")
-                st.info("Check if your API Key is correct in the Secrets tab (three dots menu -> Settings -> Secrets).")
+        except Exception as e:
+            st.error(f"Error with primary model: {e}")
+            st.info("Attempting to connect via fallback model...")
+            # FALLBACK: Try the versioned string if the first one fails
+            try:
+                model = genai.GenerativeModel('models/gemini-1.5-flash')
+                response = model.generate_content([SYSTEM_PROMPT, bit_text])
+                st.markdown("---")
+                st.markdown(response.text)
+            except Exception as e2:
+                st.error(f"Critical Error: {e2}")
     else:
-        st.error("Setup incomplete!")
+        st.error("Setup incomplete! Check at least one box in every sidebar section.")
