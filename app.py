@@ -4,11 +4,11 @@ import google.generativeai as genai
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
 
-# SECURE API KEY (This pulls from your Streamlit Secrets)
+# SECURE API KEY
 api_key = st.secrets.get("api_key", "YOUR_API_KEY_HERE")
 genai.configure(api_key=api_key)
 
-# --- 2. CROWD DATA ---
+# --- 2. DATA DICTIONARIES ---
 CROWD_PRESETS = {
     "The College Gig": {"size": 25, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "TikTok attention spans."},
     "The Biker Bar": {"size": 40, "age": "Gen X", "vibe": "Drunk/Rowdy", "desc": "Leather and zero patience."},
@@ -31,11 +31,17 @@ MODIFIERS = {
     "Actually Liking You": "They want you to win. Rare, but beautiful."
 }
 
+CITIES = [
+    "New York City", "Los Angeles", "Chicago", "Austin", 
+    "Nashville", "London", "Toronto", "Rural Small Town", "Las Vegas"
+]
+
 # --- 3. SIDEBAR UI ---
 with st.sidebar:
     st.title("🎤 Room Setup")
     
-    st.header("Step 1: The Crowd")
+    st.header("Step 1: Location & Crowd")
+    city_choice = st.selectbox("Select City", CITIES)
     base_choice = st.selectbox("Base Crowd Type", list(CROWD_PRESETS.keys()))
     selected_base = CROWD_PRESETS[base_choice]
     
@@ -45,62 +51,60 @@ with st.sidebar:
     
     st.header("Step 3: Your Style")
     style = st.selectbox("Performance Style", [
-        "Observational", 
-        "Deadpan/One-Liners", 
-        "Storytelling", 
-        "Self-Deprecating", 
-        "High Energy/Physical"
+        "Observational", "Deadpan/One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical"
     ])
 
     st.divider()
-    st.info(f"**Vibe:** {selected_base['desc']}\n\n**Modifier:** {mod_choice}")
+    st.info(f"**Location:** {city_choice}\n\n**Vibe:** {selected_base['desc']}")
 
 # --- 4. MAIN INTERFACE ---
-st.title("🎤 The Universal Crowd Sim")
-st.markdown("### *Test your set against any room, any time.*")
+st.title("🎤 The Global Crowd Sim")
+st.markdown(f"### *Testing your set in {city_choice}...*")
 
 bit_text = st.text_area("Paste your bit here:", placeholder="So, I was at the grocery store...", height=250)
 
 if st.button("Do the Set"):
     if bit_text:
         # THE BRAIN: SYSTEM PROMPT
-        SYSTEM_PROMPT = """
-        You are a Professional Comedy Simulation Engine. Respond as a specific audience reacting to a comedy bit.
+        SYSTEM_PROMPT = f"""
+        You are a Professional Comedy Simulation Engine. 
+        Respond as an audience specifically in {city_choice}.
+        
+        CITY CONTEXT: Adjust the reactions based on {city_choice} culture. 
+        (e.g., NYC is fast-paced/cynical, Nashville is polite/religious, Rural is literal/traditional).
         
         OUTPUT FORMAT:
         1. THE ROOM SOUND: (e.g. *Scattered giggles*, *Dead silence*)
-        2. AUDIENCE PERSONAS: 3 distinct reactions from people in the crowd.
-        3. TECHNICAL FEEDBACK: Analyze the Setup/Punchline efficiency and Originality for the chosen style.
+        2. AUDIENCE PERSONAS: 3 distinct reactions reflecting {city_choice} personalities.
+        3. LOCAL VIBE CHECK: Did the bit feel too 'out of town' or did it resonate locally?
         4. SCORECARD: Laughter (0-100%), Tension, and 'Kill' Probability.
-        5. COACH'S TIP: One actionable sentence to improve the bit.
+        5. COACH'S TIP: One actionable sentence to improve the bit for {city_choice}.
         """
         
-        # THE CONTEXT
         full_query = f"""
         STYLE: {style}
+        LOCATION: {city_choice}
         CROWD: {base_choice} ({selected_base['age']})
         SIZE: {selected_base['size']} people
-        ATMOSPHERE: {selected_base['desc']}
         MODIFIER: {selected_mod_desc}
         
         BIT:
         {bit_text}
         
-        Analyze how this {style} bit lands with this {mod_choice} crowd.
+        Analyze how this {style} bit lands with this {mod_choice} crowd in {city_choice}.
         """
 
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        with st.spinner('Waiting for the room to react...'):
+        with st.spinner(f'Checking the room in {city_choice}...'):
             try:
                 response = model.generate_content([SYSTEM_PROMPT, full_query])
                 st.markdown("---")
                 st.markdown(response.text)
                 
-                # Fun Haptic-style visual
                 if "100%" in response.text:
                     st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}. Check your API Key in the Secrets tab!")
+                st.error(f"Error: {e}. Check your API Key!")
     else:
-        st.warning("You can't bomb if you don't say anything. Type a joke!")
+        st.warning("Type a joke first!")
