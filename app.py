@@ -26,6 +26,7 @@ CROWD_PRESETS = {
         "vibe": "Open Mic Comics",
         "desc": "Just 10 guys waiting for their turn to talk."
     }
+}
 CROWD_PRESETS = {
     "The College Gig": {"size": 25, "age": "Gen Z", "vibe": "Encouraging but Naive", "desc": "TikTok attention spans."},
     "The Biker Bar": {"size": 40, "age": "Gen X", "vibe": "Drunk/Rowdy", "desc": "Leather and zero patience."},
@@ -112,6 +113,7 @@ AI TASK: Respond as if the modifier is fighting the base crowd.
     else:
 
         st.warning("You gotta say something first, Grampa!")
+
 
 
 
