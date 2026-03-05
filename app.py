@@ -35,29 +35,26 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
-    # --- UPDATED PRO MODE SECTION ---
     st.markdown("---")
     st.header("💡 Pro Mode")
     
-    # Consistency Toggle (Temperature control)
     lock_mode = st.checkbox("Lock Structure (Deterministic)", value=True)
-    st.caption("✅ **Checked:** Logical, consistent results. \n\n❌ **Unchecked:** Creative 'Wildcard' variations.")
+    st.caption("✅ **Checked:** Logical results. \n\n❌ **Unchecked:** Creative variations.")
     
-    st.markdown(" ") # Spacer
+    st.markdown(" ") 
     
-    # Coach Mode
     coach_mode = st.checkbox("Coach Me on This Room", value=False)
-    st.caption("Get psychological advice for this specific crowd.")
+    st.caption("Grade a bit OR (if left blank) get premise suggestions.")
 
 # --- 4. MAIN ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Drop your 'Carter Peas' or 'Ritalin' bit here...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste a joke to simulate... or leave blank with 'Coach Me' on for writing prompts.")
 
-if st.button("🚀 Run Simulation", use_container_width=True):
-    if bit_text and sel_crowds and sel_ages and sel_vibes:
+if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
+    # Check if we have the minimum requirements (Audience selections)
+    if sel_crowds and sel_ages and sel_vibes:
         try:
-            # TEMPERATURE LOGIC
-            temp_value = 0.1 if lock_mode else 1.0
+            temp_value = 0.1 if lock_mode else 0.8 # Slightly higher for prompts
             
             config = types.GenerateContentConfig(
                 temperature=temp_value,
@@ -65,26 +62,48 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 max_output_tokens=1024,
             )
 
-            coach_instruction = ""
-            if coach_mode:
-                coach_instruction = f"Provide a 'COACH'S CORNER' with advice for {', '.join(sel_ages)} in {', '.join(sel_crowds)}."
+            # --- LOGIC: SIMULATE OR SUGGEST? ---
+            if not bit_text.strip() and coach_mode:
+                # WRITING PARTNER MODE
+                prompt = f"""
+                ACT AS A COMEDY WRITING PARTNER. 
+                The user has no material yet. Based on the following room, suggest 5 specific comedy premises or 'seed' ideas.
+                VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
+                
+                Focus on:
+                - Locally relevant topics for {city}.
+                - Relatable hooks for {', '.join(sel_ages)}.
+                - Edgy or observational angles that fit a {', '.join(sel_vibes)} vibe.
+                
+                STRUCTURE:
+                1. WHY THIS ROOM IS TOUGH (Brief psych breakdown)
+                2. 5 PREMISE SUGGESTIONS (Hook + Possible Angle)
+                3. OPENING LINE IDEA
+                """
+                spinner_msg = "Brainstorming premises for this room..."
+            
+            elif bit_text.strip():
+                # STANDARD SIMULATION MODE
+                coach_instruction = f"Provide a 'COACH'S CORNER' for {', '.join(sel_ages)} in {', '.join(sel_crowds)}." if coach_mode else ""
+                prompt = f"""
+                ACT AS A COMEDY AUDIENCE SIMULATOR. 
+                {coach_instruction} 
+                VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
+                BIT: {bit_text}
+                
+                STRUCTURE:
+                1. THE ROOM SOUND
+                2. AUDIENCE PERSONAS
+                3. IS IT FUNNY?
+                4. SCORECARD (Laughter %, Tension %, Kill Probability %)
+                5. THE TAG
+                """
+                spinner_msg = "Simulating the room..."
+            else:
+                st.warning("Please paste a joke or turn on 'Coach Me' for suggestions!")
+                st.stop()
 
-            prompt = f"""
-            ACT AS A COMEDY AUDIENCE SIMULATOR. 
-            {coach_instruction} 
-            VENUE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)} | CITY: {city}
-            BIT: {bit_text}
-            
-            STRUCTURE:
-            (Coach's Corner if active)
-            1. THE ROOM SOUND
-            2. AUDIENCE PERSONAS
-            3. IS IT FUNNY?
-            4. SCORECARD (Laughter %, Tension %, Kill Probability %)
-            5. THE TAG
-            """
-            
-            with st.spinner(f"Simulating (Temp: {temp_value})..."):
+            with st.spinner(spinner_msg):
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=prompt,
@@ -98,4 +117,4 @@ if st.button("🚀 Run Simulation", use_container_width=True):
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Please check at least one box in every category!")
+        st.warning("Please check at least one box in every category (Audience, Age, and Vibe)!")
