@@ -22,7 +22,7 @@ CROWD_PRESETS = {
 MODIFIERS = {
     "Normal": "Just a standard night.",
     "Hostile/Heckling": "They are looking for a fight. One guy is already shouting 'Next!'",
-    "Distracted by Sports": "The Lakers game is on. You have to be LOUD and fast.",
+    "Distracted by Sports": "The Lakers or Dodgers game is on. You have to be LOUD.",
     "High/Edibles": "Everything is slightly delayed. Laughs are slow but deep.",
     "Passive": "The 'Arms Folded' crowd. They like you, but they won't show it.",
     "New to Live Comedy": "They don't know 'the rules.' They might talk back or be too quiet.",
@@ -32,6 +32,7 @@ MODIFIERS = {
 }
 
 CITIES = [
+    "San Luis Obispo", "Bakersfield", "Fresno", "Santa Maria", 
     "New York City", "Los Angeles", "Chicago", "Austin", 
     "Nashville", "London", "Toronto", "Rural Small Town", "Las Vegas"
 ]
@@ -71,14 +72,15 @@ if st.button("Do the Set"):
         Respond as an audience specifically in {city_choice}.
         
         CITY CONTEXT: Adjust the reactions based on {city_choice} culture. 
-        (e.g., NYC is fast-paced/cynical, Nashville is polite/religious, Rural is literal/traditional).
+        (e.g., San Luis Obispo is a chill college/beach town, Bakersfield is gritty/blue-collar, 
+        Fresno is agricultural/Valley culture, Santa Maria is laid-back/Central Coast).
         
         OUTPUT FORMAT:
-        1. THE ROOM SOUND: (e.g. *Scattered giggles*, *Dead silence*)
-        2. AUDIENCE PERSONAS: 3 distinct reactions reflecting {city_choice} personalities.
-        3. LOCAL VIBE CHECK: Did the bit feel too 'out of town' or did it resonate locally?
+        1. THE ROOM SOUND: (e.g. *Scattered giggles*, *Dead silence*, *A tractor engine idling outside*)
+        2. AUDIENCE PERSONAS: 3 distinct reactions reflecting {city_choice} locals.
+        3. LOCAL VIBE CHECK: Did the bit feel too 'LA/Hollywood' for {city_choice}?
         4. SCORECARD: Laughter (0-100%), Tension, and 'Kill' Probability.
-        5. COACH'S TIP: One actionable sentence to improve the bit for {city_choice}.
+        5. COACH'S TIP: One actionable sentence to improve the bit for a {city_choice} crowd.
         """
         
         full_query = f"""
@@ -105,6 +107,6 @@ if st.button("Do the Set"):
                 if "100%" in response.text:
                     st.balloons()
             except Exception as e:
-                st.error(f"Error: {e}. Check your API Key!")
+                st.error(f"Error: {e}. Check your API Key in the Secrets tab!")
     else:
         st.warning("Type a joke first!")
