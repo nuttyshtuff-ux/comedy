@@ -21,13 +21,13 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 c1, c2, c3, c4, c5 = st.columns([1.5, 1.5, 1.5, 1.5, 2])
 
 with c1:
-    lock_mode = st.checkbox("Lock Structure", value=True, help="✅ Checked: Precise feedback. ❌ Unchecked: Creative variations.")
+    lock_mode = st.checkbox("Lock Structure", value=True)
 with c2:
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
+    coach_mode = st.checkbox("Coach Mode", value=False)
 with c3:
-    extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest 3-5 ways to keep the joke going.")
+    extend_mode = st.checkbox("Extend Bit", value=False)
 with c4:
-    local_ref_mode = st.checkbox("Local Refs", value=False, help="Inject landmarks and inside jokes for the city.")
+    local_ref_mode = st.checkbox("Local Refs", value=False)
 with c5:
     if "last_response" in st.session_state:
         session_text = f"CITY: {st.session_state.get('last_city')}\n\nBIT:\n{st.session_state.get('last_bit')}\n\nFEEDBACK:\n{st.session_state['last_response']}"
@@ -56,52 +56,57 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
     if city.strip() and sel_venues:
         try:
             current_temp = 0.1 if lock_mode else 0.7
-            
-            # FIXED: Increased token limit slightly to prevent cutoffs during long "Local Ref" responses
             config = types.GenerateContentConfig(
                 temperature=current_temp,
                 top_p=0.95,
                 max_output_tokens=3000, 
             )
 
-            # Build concise instructions
-            instr = []
-            if coach_mode: instr.append("- Provide a 'COACH'S CORNER' critique.")
-            if extend_mode: instr.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
-            if local_ref_mode: instr.append(f"- Provide 5 specific local references for {city}.")
+            # Strict Instructions
+            instructions = []
+            if coach_mode: instructions.append("- Provide a 'COACH'S CORNER' critique.")
+            if extend_mode: instructions.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
+            if local_ref_mode: instructions.append(f"- Provide 5 specific local references for {city}.")
             
-            instr_str = "\n".join(instr)
+            instr_str = "\n".join(instructions)
             venue_str = ", ".join(sel_venues)
             aud_str = ", ".join(sel_audiences) if sel_audiences else "Mixed"
             age_str = ", ".join(sel_ages) if sel_ages else "All Ages"
 
-            # THE PROMPT - Made more forceful to prevent trailing off
+            # THE "FORCED TEMPLATE" PROMPT
             if not bit_text.strip():
                 prompt = f"""ACT AS A COMEDY WRITING PARTNER. 
-                Generate exactly 5 premises for: {city} | {venue_str} | {aud_str} | {age_str}.
+                You MUST provide EXACTLY 5 distinct comedy premises for a show in {city} at a {venue_str} venue.
+                The audience is {aud_str} and {age_str}.
+                
                 {instr_str}
-                DO NOT STOP UNTIL ALL SECTIONS ARE COMPLETE."""
+                
+                STRUCTURE YOUR RESPONSE AS FOLLOWS:
+                1. PREMISE 1
+                2. PREMISE 2
+                3. PREMISE 3
+                4. PREMISE 4
+                5. PREMISE 5
+                6. ADDITIONAL REQUESTED SECTIONS (Coach, Extensions, Refs)
+                """
             else:
                 prompt = f"""ACT AS A COMEDY AUDIENCE SIMULATOR. 
                 Simulate this bit: "{bit_text}" for {city} | {venue_str} | {aud_str} | {age_str}.
                 {instr_str}
-                DO NOT STOP UNTIL ALL SECTIONS ARE COMPLETE."""
+                """
 
-            with st.spinner("Processing..."):
+            with st.spinner("Writing the full set..."):
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=prompt,
                     config=config
                 )
                 
-                # Validation: Ensure we actually got a response
                 if response.text:
                     st.session_state['last_response'] = response.text
                     st.session_state['last_city'] = city
-                    st.session_state['last_bit'] = bit_text if bit_text.strip() else "Writing Session"
+                    st.session_state['last_bit'] = bit_text if bit_text.strip() else "Brainstorming Session"
                     st.rerun()
-                else:
-                    st.error("The AI returned an empty response. Please try again.")
                 
         except Exception as e:
             st.error(f"Error: {e}")
