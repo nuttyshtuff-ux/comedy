@@ -9,7 +9,7 @@ if not api_key:
     st.error("Missing API Key in Streamlit Secrets!")
     st.stop()
 
-# Force the stable production configuration for Tier 1
+# FORCE STABLE V1 - This is the "Magic Bullet" for Tier 1 404s
 genai.configure(api_key=api_key, transport='rest')
 
 # --- 2. DATA ---
@@ -32,63 +32,51 @@ with st.sidebar:
     st.header("3. The Vibe")
     sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
 
-    # --- MOVED TO BOTTOM ---
+    # COACH MODE AT BOTTOM
     st.markdown("---")
     st.header("💡 Pro Mode")
-    coach_mode = st.checkbox("Coach Me on This Room", value=False, help="Get advice on how to play this specific demographic.")
+    coach_mode = st.checkbox("Coach Me on This Room", value=False)
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"**Current Stage:** Live from {city}")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Testing for laughs...")
+bit_text = st.text_area("Paste your set here:", height=300)
 
 if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_ages and sel_vibes:
         
-        model_name = 'gemini-1.5-flash' 
-        
+        # Explicitly calling the stable model name
         try:
-            model = genai.GenerativeModel(model_name)
+            # Re-initializing the model with the stable endpoint
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             coach_instruction = ""
             if coach_mode:
-                coach_instruction = f"""
-                COACHING MODE ACTIVE: 
-                Before the analysis, provide a section called 'COACH'S CORNER'. 
-                Explain the specific psychological challenges of performing for {', '.join(sel_ages)} in a {', '.join(sel_crowds)} setting with a {', '.join(sel_vibes)} vibe. 
-                Suggest specific adjustments to energy, timing, or vocabulary.
-                """
+                coach_instruction = f"Before analysis, provide a 'COACH'S CORNER' section with psychological advice for {sel_ages} in a {sel_crowds} venue with a {sel_vibes} vibe."
 
             prompt = f"""
-            You are a Professional Comedy Simulation Engine and Mentor.
-            {coach_instruction}
-            
-            VENUE: {city} | AUDIENCE: {', '.join(sel_crowds)} | AGES: {', '.join(sel_ages)} | VIBE: {', '.join(sel_vibes)}
+            You are a Comedy Simulator. {coach_instruction}
+            CITY: {city} | VENUE: {sel_crowds} | AGES: {sel_ages} | VIBE: {sel_vibes}
             BIT: {bit_text}
             
-            RESPONSE STRUCTURE:
-            (If Coach Mode Active, START with 'COACH'S CORNER')
+            STRUCTURE:
+            (Coach's Corner if active)
             1. THE ROOM SOUND
             2. AUDIENCE PERSONAS
-            3. IS IT FUNNY? (Blunt assessment)
-            4. SCORECARD: Laughter %, Tension %, Kill Probability %
-            5. THE TAG: (One short, sharp line to boost or save the bit)
+            3. IS IT FUNNY?
+            4. SCORECARD (Laughter %, Tension %, Kill Probability %)
+            5. THE TAG
             """
             
-            with st.spinner(f'Simulating the room via {model_name}...'):
-                response = model.generate_content(
-                    prompt,
-                    safety_settings=[
-                        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"}
-                    ]
-                )
+            with st.spinner('Syncing with the stable server...'):
+                # Note: We are NOT using the beta endpoint here
+                response = model.generate_content(prompt)
                 st.markdown("---")
                 st.markdown(response.text)
                 if "100%" in response.text: st.balloons()
                 
         except Exception as e:
             st.error(f"Handshake Error: {e}")
+            st.info("Check Google AI Studio: Is 'Generative Language API' enabled for your project?")
     else:
         st.warning("Please check at least one box in every category!")
