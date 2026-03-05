@@ -20,8 +20,7 @@ VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AUDIENCES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
-# --- 3. THE SLIM TOP BAR (Now with 4 Toggles + Save) ---
-# Adjusted columns to fit 5 elements across the top
+# --- 3. THE SLIM TOP BAR ---
 c1, c2, c3, c4, c5 = st.columns([1.5, 1.5, 1.5, 1.5, 2])
 
 with c1:
@@ -31,7 +30,6 @@ with c2:
     coach_mode = st.checkbox("Coach Mode", value=False, help="Critique a joke or (if blank) get 5 premises.")
 
 with c3:
-    # THE NEW EXTEND TOGGLE
     extend_mode = st.checkbox("Extend Bit", value=False, help="Suggest 3-5 ways to keep the joke going or find a new angle.")
 
 with c4:
@@ -46,12 +44,12 @@ with c5:
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank for premises.")
+bit_text = st.text_area("Paste your set here:", height=250, placeholder="Drop your bit here... or leave blank with 'Coach Mode' on for premises.")
 
 # --- 5. SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    city = st.text_input("City", value="San Luis_Obispo")
+    city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City for the Local Vibe")
     
     st.markdown("---")
@@ -73,16 +71,18 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 max_output_tokens=2048, 
             )
 
-            # Build the "Intelligence Instructions"
+            # Build instructions
             instructions = []
             if coach_mode: instructions.append("Include a 'COACH'S CORNER' feedback section.")
-            if extend_mode: instructions.append("Add a section 'THE NEXT 3 MINUTES' with 3-5 ways to expand this bit into a longer story or series of tags.")
+            if extend_mode: instructions.append("Add a section 'THE NEXT 3 MINUTES' with 3-5 ways to expand this bit.")
             if local_ref_mode: instructions.append(f"Suggest 3-5 specific local references or inside jokes unique to {city}.")
             
             instr_str = " ".join(instructions)
+            venue_str = ", ".join(sel_venues)
+            aud_str = ", ".join(sel_audiences)
+            age_str = ", ".join(sel_ages)
 
             if not bit_text.strip() and coach_mode:
-                prompt = f"ACT AS A COMEDY WRITING PARTNER. {instr_str} Suggest 5 premises for: VENUE: {sel_venues} | AUDIENCE: {sel_audiences} | AGES: {sel_ages} | CITY: {city}"
+                prompt = f"ACT AS A COMEDY WRITING PARTNER. {instr_str} Suggest 5 premises for: VENUE: {venue_str} | AUDIENCE: {aud_str} | AGES: {age_str} | CITY: {city}"
                 spinner_msg = f"Brainstorming {city} ideas..."
             else:
-                prompt = f"ACT AS A COMEDY AUDIENCE SIMULATOR. {instr_str} VENUE: {sel_venues} | AUDIENCE: {sel_audiences} | AGES: {sel_ages} | CITY: {city} | BIT: {
