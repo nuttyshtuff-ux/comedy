@@ -1,85 +1,95 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. SETUP & CONFIG ---
-st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
+# --- 1. SETUP & AUTH ---
+st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# SECURE API KEY
+# Retrieve the key from Secrets
 api_key = st.secrets.get("api_key")
 if not api_key:
-    st.error("API Key missing! Check your Streamlit Secrets.")
+    st.error("API Key not found in Streamlit Secrets! Check your dashboard.")
     st.stop()
 
-# Configure the SDK
 genai.configure(api_key=api_key)
 
-# --- 2. THE COMPLETE DATASET ---
-CROWD_MIX = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "The Biker Bar", "The VFW Hall", "The Tech Mixer", "The 'Last Resort'", "The Woke Workshop", "The Open Mic Night"]
-CROWD_VIBE = ["Normal", "Hostile/Heckling", "Distracted by Sports", "Drunk 20-Somethings", "Passive", "New to Live Comedy", "Skeptical but Hopeful", "Jaded", "Actually Liking You"]
-STYLES = ["Observational", "Deadpan/One-Liners", "Storytelling", "Self-Deprecating", "High Energy/Physical", "Political", "Absurdist"]
+# --- 2. DATA CONSTANTS ---
+CROWDS = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "College Gig", "Biker Bar", "VFW Hall", "Tech Mixer", "Open Mic Night"]
+VIBES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk 20-Somethings", "Passive", "New to Comedy", "Skeptical", "Jaded", "Friendly"]
+STYLES = ["Observational", "One-Liners", "Storytelling", "Self-Deprecating", "Physical", "Political", "Absurdist"]
 
 # --- 3. SIDEBAR UI ---
 with st.sidebar:
     st.title("🎤 Room Setup")
-    city_choice = st.text_input("Enter City or Venue", value="San Luis Obispo")
+    city = st.text_input("City/Venue", value="San Luis Obispo")
     
-    st.header("1. Crowd Mix")
-    sel_crowds = [c for c in CROWD_MIX if st.checkbox(c, key=f"mix_{c}")]
+    st.header("1. The Audience")
+    sel_crowds = [c for c in CROWDS if st.checkbox(c, key=f"c_{c}")]
     
-    st.header("2. Crowd Vibe")
-    sel_vibes = [v for v in CROWD_VIBE if st.checkbox(v, key=f"vibe_{v}")]
+    st.header("2. The Vibe")
+    sel_vibes = [v for v in VIBES if st.checkbox(v, key=f"v_{v}")]
     
-    st.header("3. Your Style")
-    sel_styles = [s for s in STYLES if st.checkbox(s, key=f"style_{s}")]
-
-    st.divider()
-    if not sel_crowds or not sel_vibes or not sel_styles:
-        st.warning("⚠️ Check at least one box in each section!")
+    st.header("3. Performance Style")
+    sel_styles = [s for s in STYLES if st.checkbox(s, key=f"s_{s}")]
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Sim")
-st.markdown(f"### *Live from {city_choice}...*")
+st.markdown(f"**Current Stage:** Live from {city}")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Paste your bit...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Enter your jokes here...")
 
-if st.button("Do the Set"):
+if st.button("🚀 Run Simulation", use_container_width=True):
     if bit_text and sel_crowds and sel_vibes and sel_styles:
         
-        # PROMPT CONSTRUCTION
-        prompt = f"""
-        Analyze this comedy bit for a {city_choice} crowd.
-        CROWD TYPES: {', '.join(sel_crowds)}
-        MOOD: {', '.join(sel_vibes)}
-        DELIVERY: {', '.join(sel_styles)}
+        # TIER 1 SUCCESSION PLAN
+        # Since you're Tier 1, Pro 1.5 is your best bet for nuanced comedy feedback
+        models_to_try = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro']
         
-        BIT: {bit_text}
+        # Safety: BLOCK_NONE allows edgy comedy content
+        safety = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+        ]
         
-        Provide: Room Sound, 3 Audience Personas, Scorecard, and Coach's Tip.
-        """
-
-        # TRIAGE LOGIC: Cycle through models to find the one your key allows
-        # This list covers the most current stable names for 2026.
         success = False
-        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-        
-        last_error = ""
-        for model_name in models_to_try:
+        for m_name in models_to_try:
             if success: break
             try:
-                # Use standard generation (no beta flag unless necessary)
-                model = genai.GenerativeModel(model_name)
-                with st.spinner(f'Consulting {model_name}...'):
+                model = genai.GenerativeModel(model_name=m_name, safety_settings=safety)
+                
+                prompt = f"""
+                You are a Comedy Crowd Simulator.
+                VENUE: {city}
+                AUDIENCE TYPE: {', '.join(sel_crowds)}
+                CURRENT MOOD: {', '.join(sel_vibes)}
+                COMIC STYLE: {', '.join(sel_styles)}
+                
+                THE BIT:
+                {bit_text}
+                
+                RESPONSE FORMAT:
+                - ROOM SOUND: (Describe the auditory vibe)
+                - LOCAL PERSONAS: (3 specific SLO-style audience reactions)
+                - ANALYSIS: (How the jokes landed given the crowd's mood)
+                - SCORECARD: Laughter %, Tension %, Kill Probability %
+                - COACH'S TIP: (One actionable way to improve the set)
+                """
+                
+                with st.spinner(f'Consulting {m_name}...'):
                     response = model.generate_content(prompt)
+                    st.success(f"Response generated via {m_name}")
                     st.markdown("---")
                     st.markdown(response.text)
                     if "100%" in response.text: st.balloons()
                     success = True
             except Exception as e:
-                last_error = str(e)
+                st.warning(f"Note: {m_name} is still initializing or restricted. Trying fallback...")
+                last_error = e
                 continue
         
         if not success:
-            st.error(f"Critical Failure: {last_error}")
-            st.info("Since you just enabled billing, wait 3-5 minutes for Google to update your project permissions.")
+            st.error(f"Critical Error: {last_error}")
+            st.info("Check your Google AI Studio dashboard. If it says 'Tier 1,' make sure your billing account is active and try creating a NEW API key.")
     else:
-        st.error("Setup incomplete!")
+        st.error("Please fill out all categories in the sidebar and paste your bit!")
