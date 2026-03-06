@@ -19,7 +19,7 @@ if not api_key:
     st.error("Missing API Key!")
     st.stop()
 
-# Simplified client setup
+# Clean client setup
 client = genai.Client(api_key=api_key)
 
 VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop", "The Theater", "House Party", "Corporate Event", "Toastmasters", "Elk's Club", "Staff Meeting", "Opening for Big Name"]
@@ -63,18 +63,23 @@ bit = st.text_area("Paste your set here:", height=300, placeholder="Enter your j
 if st.button("🚀 Run Simulation", use_container_width=True):
     if city and sel_v:
         try:
+            # Temperature: 0.1 for structural check, 0.7 for creative crowd feedback
             temp = 0.1 if lock_mode else 0.7
             cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
+            
             v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
             v_instr = f"Crowd vibe is {v_map[v_score]} out of 10. "
+            
             instr = [v_instr]
             if coach_mode: instr.append("Include a COACH CORNER section.")
             if extend_mode: instr.append("Include a NEXT 3 MINUTES section.")
             if local_ref_mode: instr.append(f"Include 5 local references for {city}.")
+            
             p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
+            
             with st.spinner("Processing..."):
-                # Using the explicit full experimental name which is most widely available
-                res = client.models.generate_content(model="gemini-2.0-flash-exp", contents=p, config=cfg)
+                # MOVED TO GEMINI 3 FLASH PREVIEW
+                res = client.models.generate_content(model="gemini-3-flash-preview", contents=p, config=cfg)
                 st.session_state["last_res"] = res.text
                 st.rerun()
         except Exception as e:
