@@ -48,25 +48,24 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 with st.sidebar:
     st.title("🎤 Studio Controls")
     
-    # NEW: QUICK START EXPANDER
-    with st.expander("📖 About & Quick Start"):
-        st.markdown("""
-        **How to use:**
-        1. **Set the Room:** Pick your City, Venue, and Audience in the sidebar.
-        2. **Input Set:** Paste your jokes in the main box.
-        3. **Brainstorm:** Leave the box blank and turn on **Coach Mode** for 5 new premises.
-        4. **Simulate:** Hit 'Run' to see how the crowd reacts.
-        5. **Save:** Download your session feedback at the bottom of this menu!
-        
-        *Built for comics workshopping sets in the 805 and beyond.*
-        """)
-
     with st.container():
         st.subheader("Workshop Tools")
         lock_mode = st.checkbox("Lock Structure", value=True)
         coach_mode = st.checkbox("Coach Mode", value=False)
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
+        
+        # MOVED QUICK START: Styled as a workshop tool
+        show_help = st.checkbox("Help & Quick Start", value=False)
+        if show_help:
+            st.info("""
+            **How to use:**
+            1. **Set the Room:** Pick City, Venue, and Audience.
+            2. **Input Set:** Paste jokes in the main box.
+            3. **Brainstorm:** Leave box blank + **Coach Mode** for 5 premises.
+            4. **Simulate:** Hit 'Run'.
+            5. **Save:** Download at the bottom of this menu!
+            """)
         
         st.markdown("---")
         st.subheader("Room Setup")
@@ -97,7 +96,7 @@ with st.sidebar:
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Simulator")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here... or leave blank with 'Coach Mode' on for premises.")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
 
 # --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
