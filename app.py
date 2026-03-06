@@ -70,7 +70,7 @@ with st.sidebar:
         
         st.markdown("---")
         st.subheader("Room Setup")
-        city = st.text_input("City (Required)", value="San Luis Obispo")
+        city_val = st.text_input("City (Required)", value="San Luis Obispo")
         st.caption("Enter a City for the Local Vibe") 
         
         st.header("1. Venue (Required)")
@@ -97,14 +97,36 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type yo
 
 # --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
-    if city.strip() and sel_venues:
+    if city_val.strip() and sel_venues:
         try:
             current_temp = 0.1 if lock_mode else 0.7
             config = types.GenerateContentConfig(temperature=current_temp, top_p=0.95, max_output_tokens=3000)
 
-            # --- BUILD PROMPT INSTRUCTIONS ---
-            instr = []
-            if coach_mode: instr.append("- Provide a 'COACH'S CORNER' feedback section.")
-            if extend_mode: instr.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
-            if local_ref_mode: 
-                ref_text = f"- Provide 5 local references for {city
+            # --- BUILD PROMPT ---
+            instr_list = []
+            if coach_mode: instr_list.append("- Provide a 'COACH'S CORNER' feedback section.")
+            if extend_mode: instr_list.append("- Provide 'THE NEXT 3 MINUTES' expansion ideas.")
+            if local_ref_mode: instr_list.append("- Provide 5 local references for " + city_val + ".")
+            
+            instr_str = "\n".join(instr_list)
+            venue_str = ", ".join(sel_venues)
+
+            if not bit_text.strip():
+                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 distinct premises for " + city_val + " at " + venue_str + ". " + instr_str
+            else:
+                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate this bit: '" + bit_text + "' for " + city_val + " at " + venue_str + ". " + instr_str
+
+            with st.spinner("Processing..."):
+                response = client.models.generate_content(model="gemini-2.5-flash", contents=final_prompt, config=config)
+                st.session_state['last_response'] = response.text
+                st.rerun()
+                
+        except Exception as e:
+            st.error("Error: " + str(e))
+    else:
+        st.warning("Please select City and Venue in the sidebar!")
+
+# --- 6. DISPLAY ---
+if "last_response" in st.session_state:
+    st.markdown("---")
+    st.markdown(st.session_state['last_response'])
