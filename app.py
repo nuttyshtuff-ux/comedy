@@ -42,11 +42,11 @@ client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
 # --- 2. DATA ---
 VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop / Bookstore", "The Theater", "House Party", "Corporate / Charity Event", "Toastmasters", "Elk's Club", "Company Staff Bonding Meeting", "Opening for a Big Name"]
 AUDIENCES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
-AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # --- 3. THE SIDEBAR ---
 with st.sidebar:
     st.title("🎤 Studio Controls")
+    st.success("✅ Guest Access Active")
     
     with st.container():
         st.subheader("Workshop Tools")
@@ -55,23 +55,30 @@ with st.sidebar:
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
         
-        # FIXED: Removed the 'kind' argument that caused the crash
         if st.button("🔗 Quick Start Guide"):
-            st.info("Pick your Venue, paste your set, and hit Run. Use Coach Mode for premises!")
+            st.info("Pick your Venue, tune the Vibe, paste your set, and hit Run!")
         
         st.markdown("---")
         st.subheader("Room Setup")
         city_val = st.text_input("City (Required)", value="San Luis Obispo")
-        st.caption("Enter a City for the Local Vibe") 
         
         st.header("1. Venue (Required)")
         sel_venues = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
-        
-        st.header("2. Audience")
+
+        # --- THE VIBE SLIDER ---
+        st.markdown("---")
+        st.header("2. Crowd Vibe")
+        vibe_score = st.slider(
+            "Tough Crowd <---> Loving It",
+            min_value=1,
+            max_value=10,
+            value=5,
+            help="1 = Hostile, 5 = Normal, 10 = Standing Ovation"
+        )
+        st.markdown("---")
+
+        st.header("3. Audience Type")
         sel_audiences = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-        
-        st.header("3. Age Range")
-        sel_ages = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
     # FOOTER
     st.markdown('<div class="sidebar-footer">', unsafe_allow_html=True)
@@ -80,46 +87,3 @@ with st.sidebar:
         st.download_button("💾 Download", data=st.session_state.get('last_response'), file_name="feedback.txt", use_container_width=True)
     else:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# --- 4. MAIN INTERFACE ---
-st.title("🎤 Comedy Crowd Simulator")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
-
-# --- 5. EXECUTION ---
-if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
-    if city_val.strip() and sel_venues:
-        try:
-            current_temp = 0.1 if lock_mode else 0.7
-            config = types.GenerateContentConfig(temperature=current_temp, top_p=0.95, max_output_tokens=3000)
-
-            # --- BUILD PROMPT ---
-            instr_list = []
-            if coach_mode: instr_list.append("- Provide a 'COACH'S CORNER' feedback section.")
-            if extend_mode: instr_list.append("- Provide 'THE NEXT 3 MINUTES' expansion ideas.")
-            if local_ref_mode: 
-                # Simple string building to avoid f-string truncation
-                instr_list.append("- Provide 5 local references for " + str(city_val) + ".")
-            
-            instr_str = "\n".join(instr_list)
-            venue_str = ", ".join(sel_venues)
-
-            if not bit_text.strip():
-                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 premises for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
-            else:
-                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate: '" + str(bit_text) + "' for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
-
-            with st.spinner("Processing..."):
-                response = client.models.generate_content(model="gemini-2.5-flash", contents=final_prompt, config=config)
-                st.session_state['last_response'] = response.text
-                st.rerun()
-                
-        except Exception as e:
-            st.error("Error: " + str(e))
-    else:
-        st.warning("Please select City and Venue in the sidebar!")
-
-# --- 6. DISPLAY ---
-if "last_response" in st.session_state:
-    st.markdown("---")
-    st.markdown(st.session_state['last_response'])
