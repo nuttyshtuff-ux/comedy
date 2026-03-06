@@ -28,6 +28,7 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 with st.sidebar:
     st.title("🎤 Studio Controls")
     st.success("✅ Guest Access Active")
+    
     with st.container():
         st.subheader("Tools")
         lock_mode = st.checkbox("Lock Structure", value=True)
@@ -58,7 +59,13 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.title("🎤 Comedy Crowd Simulator")
-bit = st.text_area("Paste your set here:", height=300, placeholder="Type your bit...")
+
+# UPDATED: More explicit placeholder text
+bit = st.text_area(
+    "Paste your set here:", 
+    height=300, 
+    placeholder="Enter your jokes or bit here to see how your crowd will react..."
+)
 
 # 5. RUN LOGIC
 if st.button("🚀 Run Simulation", use_container_width=True):
@@ -68,14 +75,14 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
             
             v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-            v_instr = f"Crowd is {v_map[v_score]}. "
+            v_instr = f"Crowd vibe is {v_map[v_score]} out of 10. "
             
             instr = [v_instr]
-            if coach_mode: instr.append("Include Coach corner.")
-            if extend_mode: instr.append("Include next 3 mins.")
-            if local_ref_mode: instr.append(f"Include 5 local refs for {city}.")
+            if coach_mode: instr.append("Include a 'COACH'S CORNER' feedback section.")
+            if extend_mode: instr.append("Include a 'THE NEXT 3 MINUTES' expansion ideas.")
+            if local_ref_mode: instr.append(f"Include 5 specific local references for {city}.")
             
-            p = f"Act as audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
+            p = f"Act as a comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience traits: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit to simulate: {bit}"
             
             with st.spinner("Processing..."):
                 res = client.models.generate_content(model="gemini-2.0-flash", contents=p, config=cfg)
@@ -84,7 +91,7 @@ if st.button("🚀 Run Simulation", use_container_width=True):
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.warning("Select City and Venue!")
+        st.warning("Please select City and Venue in the sidebar!")
 
 # 6. DISPLAY
 if "last_res" in st.session_state:
