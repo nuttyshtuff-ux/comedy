@@ -87,3 +87,45 @@ with st.sidebar:
         st.download_button("💾 Download", data=st.session_state.get('last_response'), file_name="feedback.txt", use_container_width=True)
     else:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 4. MAIN INTERFACE (RESTORED) ---
+st.title("🎤 Comedy Crowd Simulator")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
+
+# --- 5. EXECUTION ---
+if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
+    if city_val.strip() and sel_venues:
+        try:
+            current_temp = 0.1 if lock_mode else 0.7
+            config = types.GenerateContentConfig(temperature=current_temp, top_p=0.95, max_output_tokens=3000)
+
+            # --- MAP THE VIBE ---
+            vibe_map = {
+                1: "The crowd is HOSTILE. Describe hecklers and brutal silence.",
+                2: "The crowd is TOUGH. They only laugh at 10/10 material.",
+                3: "The crowd is SKEPTICAL. Polite chuckles only.",
+                4: "The crowd is STIFF. Hard to win over.",
+                5: "The crowd is NORMAL. Typical reactions.",
+                6: "The crowd is WARM. Supportive vibes.",
+                7: "The crowd is FRIENDLY. High energy.",
+                8: "The crowd LOVES you. Lots of laughter.",
+                9: "The crowd is ON FIRE. Everything you say 'kills'.",
+                10: "A LEGENDARY SET. Standing ovation and nonstop laughter."
+            }
+            vibe_instruction = vibe_map[vibe_score]
+
+            # --- BUILD PROMPT ---
+            instr_list = [vibe_instruction]
+            if coach_mode: instr_list.append("- Provide a 'COACH'S CORNER' feedback section.")
+            if extend_mode: instr_list.append("- Provide 'THE NEXT 3 MINUTES' expansion ideas.")
+            if local_ref_mode: instr_list.append("- Provide 5 local references for " + str(city_val) + ".")
+            
+            instr_str = "\n".join(instr_list)
+            venue_str = ", ".join(sel_venues)
+            aud_str = ", ".join(sel_audiences) if sel_audiences else "Mixed"
+
+            if not bit_text.strip():
+                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 premises for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
+            else:
+                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate: '" + str(bit_text) + "' for " + str
