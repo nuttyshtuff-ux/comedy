@@ -18,7 +18,9 @@ api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key!")
     st.stop()
-client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
+
+# Simplified client setup
+client = genai.Client(api_key=api_key)
 
 VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop", "The Theater", "House Party", "Corporate Event", "Toastmasters", "Elk's Club", "Staff Meeting", "Opening for Big Name"]
 AUDIENCES = ["Normal", "Hostile", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical", "Jaded", "Friendly", "Easily Offended", "Chatty", "Other Comics"]
@@ -71,7 +73,8 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             if local_ref_mode: instr.append(f"Include 5 local references for {city}.")
             p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
             with st.spinner("Processing..."):
-                res = client.models.generate_content(model="gemini-2-flash", contents=p, config=cfg)
+                # Using the explicit full experimental name which is most widely available
+                res = client.models.generate_content(model="gemini-2.0-flash-exp", contents=p, config=cfg)
                 st.session_state["last_res"] = res.text
                 st.rerun()
         except Exception as e:
