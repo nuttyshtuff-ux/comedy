@@ -30,16 +30,13 @@ with st.sidebar:
     st.success("✅ Guest Access Active")
     with st.container():
         st.subheader("Tools")
-        # RESTORED: Tooltips via the 'help' parameter
         lock_mode = st.checkbox("Lock Structure", value=True, help="Keeps the AI focused on joke logic vs creative tangents.")
         coach_mode = st.checkbox("Coach Mode", value=False, help="Adds a technical 'Coach's Corner' feedback section.")
         extend_mode = st.checkbox("Extend Bit", value=False, help="Asks the AI to write the next 3 minutes of the set.")
         local_ref_mode = st.checkbox("Local Refs", value=False, help="Forces the AI to use specific landmarks from the chosen city.")
-        
         st.markdown("---")
         city = st.text_input("City", value="San Luis Obispo")
         st.caption("Enter a City for the Local Vibe") 
-        
         st.header("1. Venue")
         sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
         st.header("2. Crowd Vibe")
@@ -58,15 +55,18 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.title("🎤 Comedy Crowd Simulator")
-bit = st.text_area("Paste your set here:", height=300, placeholder="Enter your jokes or bit here...")
+# RESTORED: Explicit instructions in the placeholder
+bit = st.text_area(
+    "Paste your set here:", 
+    height=300, 
+    placeholder="Enter your jokes or bit here to see how your crowd will react..."
+)
 
 # 5. RUN LOGIC (With Fail-Safe)
 if st.button("🚀 Run Simulation", use_container_width=True):
     if city and sel_v:
-        # Try primary, fall back to stable if 503 occurs
         models = ["gemini-3-flash-preview", "gemini-1.5-flash"]
         success = False
-        
         for m_name in models:
             try:
                 temp = 0.1 if lock_mode else 0.7
@@ -78,7 +78,6 @@ if st.button("🚀 Run Simulation", use_container_width=True):
                 if extend_mode: instr.append("Include a NEXT 3 MINUTES section.")
                 if local_ref_mode: instr.append(f"Include 5 local references for {city}.")
                 p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
-                
                 with st.spinner(f"🎤 Crowd is thinking ({m_name})..."):
                     res = client.models.generate_content(model=m_name, contents=p, config=cfg)
                     st.session_state["last_res"] = res.text
