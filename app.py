@@ -22,6 +22,7 @@ client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
 
 VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop", "The Theater", "House Party", "Corporate Event", "Toastmasters", "Elk's Club", "Staff Meeting", "Opening for Big Name"]
 AUDIENCES = ["Normal", "Hostile", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical", "Jaded", "Friendly", "Easily Offended", "Chatty", "Other Comics"]
+AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # 3. SIDEBAR
 with st.sidebar:
@@ -33,16 +34,20 @@ with st.sidebar:
         coach_mode = st.checkbox("Coach Mode", value=False)
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
-        if st.button("🔗 Quick Start"):
-            st.info("Pick Room, Tune Vibe, Paste Set, Run!")
         st.markdown("---")
         city = st.text_input("City", value="San Luis Obispo")
+        
         st.header("1. Venue")
         sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
+        
         st.header("2. Crowd Vibe")
         v_score = st.slider("Tough <-> Loving", 1, 10, 5)
-        st.header("3. Audience")
+        
+        st.header("3. Audience Type")
         sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
+        
+        st.header("4. Age Range")
+        sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
     st.markdown('<div class="sidebar-footer">', unsafe_allow_html=True)
     if "last_res" in st.session_state:
@@ -70,7 +75,7 @@ if st.button("🚀 Run Simulation", use_container_width=True):
             if extend_mode: instr.append("Include next 3 mins.")
             if local_ref_mode: instr.append(f"Include 5 local refs for {city}.")
             
-            p = f"Act as audience. Venue: {', '.join(sel_v)}. City: {city}. Audience types: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
+            p = f"Act as audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
             
             with st.spinner("Processing..."):
                 res = client.models.generate_content(model="gemini-2.0-flash", contents=p, config=cfg)
