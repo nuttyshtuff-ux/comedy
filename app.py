@@ -5,36 +5,27 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎤", layout="wide")
 
-# --- CUSTOM CSS: Centering, Mobile Label, and PINNED Sidebar Bottom ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    /* 1. Center the Main Title */
     .stApp h1 { text-align: center; width: 100%; }
-
-    /* 2. Mobile "Options" Label */
     @media (max-width: 991px) {
         [data-testid="stHeader"]::before {
             content: 'Options'; position: absolute; left: 50px; top: 15px;
             font-weight: bold; font-size: 16px; color: #31333F; 
         }
     }
-
-    /* 3. PIN Session Management to the bottom of the sidebar */
-    /* This ensures it doesn't get pushed off by the long list of venues */
     [data-testid="stSidebarUserContent"] {
         display: flex;
         flex-direction: column;
         height: 100vh;
     }
-    
     .sidebar-footer {
         margin-top: auto;
         padding-top: 20px;
         padding-bottom: 20px;
         border-top: 1px solid #ddd;
     }
-
-    /* 4. General UI fixes */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     .stButton button { height: 3.5em; border-radius: 10px; font-weight: bold; }
     </style>
@@ -57,7 +48,19 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 with st.sidebar:
     st.title("🎤 Studio Controls")
     
-    # WRAP SCROLLABLE CONTENT IN A CONTAINER
+    # NEW: QUICK START EXPANDER
+    with st.expander("📖 About & Quick Start"):
+        st.markdown("""
+        **How to use:**
+        1. **Set the Room:** Pick your City, Venue, and Audience in the sidebar.
+        2. **Input Set:** Paste your jokes in the main box.
+        3. **Brainstorm:** Leave the box blank and turn on **Coach Mode** for 5 new premises.
+        4. **Simulate:** Hit 'Run' to see how the crowd reacts.
+        5. **Save:** Download your session feedback at the bottom of this menu!
+        
+        *Built for comics workshopping sets in the 805 and beyond.*
+        """)
+
     with st.container():
         st.subheader("Workshop Tools")
         lock_mode = st.checkbox("Lock Structure", value=True)
@@ -87,20 +90,14 @@ with st.sidebar:
         session_text += f"BIT:\n{st.session_state.get('last_bit')}\n\n"
         session_text += f"FEEDBACK:\n{st.session_state['last_response']}"
         
-        st.download_button(
-            label="💾 Download This Session",
-            data=session_text,
-            file_name="comedy_set_feedback.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
+        st.download_button("💾 Download This Session", data=session_text, file_name="comedy_set_feedback.txt", use_container_width=True)
     else:
         st.button("💾 Save (Run Simulation First)", disabled=True, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Simulator")
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here... or leave blank with 'Coach Mode' on for premises.")
 
 # --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
