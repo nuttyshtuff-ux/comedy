@@ -65,22 +65,19 @@ with st.sidebar:
         st.header("1. Venue (Required)")
         sel_venues = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
 
-        # --- THE VIBE SLIDER ---
         st.markdown("---")
         st.header("2. Crowd Vibe")
         vibe_score = st.slider(
             "Tough Crowd <---> Loving It",
             min_value=1,
             max_value=10,
-            value=5,
-            help="1 = Hostile, 5 = Normal, 10 = Standing Ovation"
+            value=5
         )
         st.markdown("---")
 
         st.header("3. Audience Type")
         sel_audiences = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
 
-    # FOOTER
     st.markdown('<div class="sidebar-footer">', unsafe_allow_html=True)
     st.subheader("Session Management")
     if "last_response" in st.session_state:
@@ -95,31 +92,4 @@ bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type yo
 
 # --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
-    if city_val.strip() and sel_venues:
-        try:
-            current_temp = 0.1 if lock_mode else 0.7
-            config = types.GenerateContentConfig(temperature=current_temp, top_p=0.95, max_output_tokens=3000)
-
-            # --- MAP THE VIBE ---
-            vibe_map = {
-                1: "The crowd is HOSTILE. Describe hecklers and brutal silence.",
-                2: "The crowd is TOUGH. They only laugh at 10/10 material.",
-                3: "The crowd is SKEPTICAL. Polite chuckles only.",
-                4: "The crowd is STIFF. Hard to win over.",
-                5: "The crowd is NORMAL. Typical reactions.",
-                6: "The crowd is WARM. Supportive vibes.",
-                7: "The crowd is FRIENDLY. High energy.",
-                8: "The crowd LOVES you. Lots of laughter.",
-                9: "The crowd is ON FIRE. Everything you say 'kills'.",
-                10: "A LEGENDARY SET. Standing ovation and nonstop laughter."
-            }
-            vibe_instruction = vibe_map[vibe_score]
-
-            # --- BUILD PROMPT ---
-            instr_list = [vibe_instruction]
-            if coach_mode: instr_list.append("- Provide a 'COACH'S CORNER' feedback section.")
-            if extend_mode: instr_list.append("- Provide 'THE NEXT 3 MINUTES' expansion ideas.")
-            if local_ref_mode: instr_list.append("- Provide 5 local references for " + str(city_val) + ".")
-            
-            instr_str = "\n".join(instr_list)
-            venue_str = ", ".join(sel_venues)
+    if city_
