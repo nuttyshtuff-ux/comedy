@@ -26,16 +26,6 @@ st.markdown("""
         padding-bottom: 20px;
         border-top: 1px solid #ddd;
     }
-    .stButton > button[kind="secondary"] {
-        border: none;
-        background: transparent;
-        text-decoration: underline;
-        color: #007bff;
-        padding: 0;
-        height: auto;
-        font-size: 14px;
-        text-align: left;
-    }
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     .stButton button { height: 3.5em; border-radius: 10px; font-weight: bold; }
     </style>
@@ -65,7 +55,8 @@ with st.sidebar:
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
         
-        if st.button("🔗 Quick Start Guide", kind="secondary"):
+        # FIXED: Removed the 'kind' argument that caused the crash
+        if st.button("🔗 Quick Start Guide"):
             st.info("Pick your Venue, paste your set, and hit Run. Use Coach Mode for premises!")
         
         st.markdown("---")
@@ -106,15 +97,17 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
             instr_list = []
             if coach_mode: instr_list.append("- Provide a 'COACH'S CORNER' feedback section.")
             if extend_mode: instr_list.append("- Provide 'THE NEXT 3 MINUTES' expansion ideas.")
-            if local_ref_mode: instr_list.append("- Provide 5 local references for " + city_val + ".")
+            if local_ref_mode: 
+                # Simple string building to avoid f-string truncation
+                instr_list.append("- Provide 5 local references for " + str(city_val) + ".")
             
             instr_str = "\n".join(instr_list)
             venue_str = ", ".join(sel_venues)
 
             if not bit_text.strip():
-                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 distinct premises for " + city_val + " at " + venue_str + ". " + instr_str
+                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 premises for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
             else:
-                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate this bit: '" + bit_text + "' for " + city_val + " at " + venue_str + ". " + instr_str
+                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate: '" + str(bit_text) + "' for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
 
             with st.spinner("Processing..."):
                 response = client.models.generate_content(model="gemini-2.5-flash", contents=final_prompt, config=config)
