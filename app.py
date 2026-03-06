@@ -36,7 +36,11 @@ with st.sidebar:
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
         st.markdown("---")
+        
+        st.subheader("Room Setup")
         city = st.text_input("City", value="San Luis Obispo")
+        # RESTORED: The local vibe caption
+        st.caption("Enter a City for the Local Vibe") 
         
         st.header("1. Venue")
         sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
@@ -59,8 +63,6 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.title("🎤 Comedy Crowd Simulator")
-
-# UPDATED: More explicit placeholder text
 bit = st.text_area(
     "Paste your set here:", 
     height=300, 
