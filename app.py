@@ -18,8 +18,6 @@ api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key!")
     st.stop()
-
-# Clean client setup
 client = genai.Client(api_key=api_key)
 
 VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop", "The Theater", "House Party", "Corporate Event", "Toastmasters", "Elk's Club", "Staff Meeting", "Opening for Big Name"]
@@ -32,13 +30,16 @@ with st.sidebar:
     st.success("✅ Guest Access Active")
     with st.container():
         st.subheader("Tools")
-        lock_mode = st.checkbox("Lock Structure", value=True)
-        coach_mode = st.checkbox("Coach Mode", value=False)
-        extend_mode = st.checkbox("Extend Bit", value=False)
-        local_ref_mode = st.checkbox("Local Refs", value=False)
+        # RESTORED: Tooltips via the 'help' parameter
+        lock_mode = st.checkbox("Lock Structure", value=True, help="Keeps the AI focused on joke logic vs creative tangents.")
+        coach_mode = st.checkbox("Coach Mode", value=False, help="Adds a technical 'Coach's Corner' feedback section.")
+        extend_mode = st.checkbox("Extend Bit", value=False, help="Asks the AI to write the next 3 minutes of the set.")
+        local_ref_mode = st.checkbox("Local Refs", value=False, help="Forces the AI to use specific landmarks from the chosen city.")
+        
         st.markdown("---")
         city = st.text_input("City", value="San Luis Obispo")
         st.caption("Enter a City for the Local Vibe") 
+        
         st.header("1. Venue")
         sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
         st.header("2. Crowd Vibe")
@@ -59,31 +60,38 @@ with st.sidebar:
 st.title("🎤 Comedy Crowd Simulator")
 bit = st.text_area("Paste your set here:", height=300, placeholder="Enter your jokes or bit here...")
 
-# 5. RUN LOGIC
+# 5. RUN LOGIC (With Fail-Safe)
 if st.button("🚀 Run Simulation", use_container_width=True):
     if city and sel_v:
-        try:
-            # Temperature: 0.1 for structural check, 0.7 for creative crowd feedback
-            temp = 0.1 if lock_mode else 0.7
-            cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
-            
-            v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-            v_instr = f"Crowd vibe is {v_map[v_score]} out of 10. "
-            
-            instr = [v_instr]
-            if coach_mode: instr.append("Include a COACH CORNER section.")
-            if extend_mode: instr.append("Include a NEXT 3 MINUTES section.")
-            if local_ref_mode: instr.append(f"Include 5 local references for {city}.")
-            
-            p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
-            
-            with st.spinner("Processing..."):
-                # MOVED TO GEMINI 3 FLASH PREVIEW
-                res = client.models.generate_content(model="gemini-3-flash-preview", contents=p, config=cfg)
-                st.session_state["last_res"] = res.text
-                st.rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
+        # Try primary, fall back to stable if 503 occurs
+        models = ["gemini-3-flash-preview", "gemini-1.5-flash"]
+        success = False
+        
+        for m_name in models:
+            try:
+                temp = 0.1 if lock_mode else 0.7
+                cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
+                v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
+                v_instr = f"Crowd vibe is {v_map[v_score]} out of 10. "
+                instr = [v_instr]
+                if coach_mode: instr.append("Include a COACH CORNER section.")
+                if extend_mode: instr.append("Include a NEXT 3 MINUTES section.")
+                if local_ref_mode: instr.append(f"Include 5 local references for {city}.")
+                p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: {' '.join(instr)}. Bit: {bit}"
+                
+                with st.spinner(f"🎤 Crowd is thinking ({m_name})..."):
+                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
+                    st.session_state["last_res"] = res.text
+                    success = True
+                    break
+            except Exception as e:
+                if "503" in str(e) and m_name != models[-1]:
+                    st.warning("Primary crowd is busy, switching rooms...")
+                    continue
+                else:
+                    st.error(f"Error: {e}")
+                    break
+        if success: st.rerun()
     else:
         st.warning("Please select City and Venue!")
 
