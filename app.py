@@ -45,8 +45,17 @@ if not api_key:
 
 client = genai.Client(api_key=api_key, http_options={'api_version': 'v1'})
 
-# --- 2. DATA ---
-VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gig", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic Night", "Local Craft Brewery", "Wine Bar", "Coffee Shop / Bookstore", "The Theater", "House Party", "Corporate / Charity Event", "Opening for a Big Name"]
+# --- 2. DATA (With New Venues Added) ---
+VENUES = [
+    "Underground Comedy", "The Comedy Shop", "Don't Tell", 
+    "The College Gig", "Dive Bar", "Upscale Bar", 
+    "Comedy Showcase", "Open Mic Night", 
+    "Local Craft Brewery", "Wine Bar", 
+    "Coffee Shop / Bookstore", "The Theater", 
+    "House Party", "Corporate / Charity Event",
+    "Toastmasters", "Elk's Club", "Company Staff Bonding Meeting", # Added
+    "Opening for a Big Name"
+]
 AUDIENCES = ["Normal", "Hostile/Heckling", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical but Hopeful", "Jaded", "Friendly", "Silence for No Reason", "Easily Offended", "Chatty", "Other Comics Watching"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
@@ -63,6 +72,7 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("Room Setup")
     city = st.text_input("City (Required)", value="San Luis Obispo")
+    st.caption("Enter a City for the Local Vibe") # Restored Instruction
     
     st.header("1. The Venue (Required)")
     sel_venues = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
@@ -81,13 +91,12 @@ with st.sidebar:
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Simulator")
 
-bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
+bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here... or leave blank with 'Coach Mode' on for premises.")
 
 # --- 5. EXECUTION ---
 if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
     if city.strip() and sel_venues:
         try:
-            # Fixed ternary logic
             current_temp = 0.1 if lock_mode else 0.7
             
             config = types.GenerateContentConfig(
@@ -96,7 +105,6 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
                 max_output_tokens=3000
             )
 
-            # Build instructions
             instructions = []
             if coach_mode: instructions.append("- Provide a 'COACH'S CORNER' feedback section.")
             if extend_mode: instructions.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
