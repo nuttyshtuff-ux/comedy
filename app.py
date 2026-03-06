@@ -5,21 +5,16 @@ from google.genai import types
 # --- 1. SETUP ---
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎤", layout="wide")
 
-# --- CUSTOM CSS: Centering, Mobile Label, and Pinned Footer ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    /* 1. Center the Main Title */
     .stApp h1 { text-align: center; width: 100%; }
-    
-    /* 2. Mobile "Options" Label */
     @media (max-width: 991px) {
         [data-testid="stHeader"]::before {
             content: 'Options'; position: absolute; left: 50px; top: 15px;
             font-weight: bold; font-size: 16px; color: #31333F; 
         }
     }
-    
-    /* 3. Pinned Sidebar Layout */
     [data-testid="stSidebarUserContent"] {
         display: flex;
         flex-direction: column;
@@ -31,8 +26,6 @@ st.markdown("""
         padding-bottom: 20px;
         border-top: 1px solid #ddd;
     }
-    
-    /* 4. Style for the Quick Start 'Link' button */
     .stButton > button[kind="secondary"] {
         border: none;
         background: transparent;
@@ -43,8 +36,6 @@ st.markdown("""
         font-size: 14px;
         text-align: left;
     }
-
-    /* 5. General UI fixes */
     div[data-baseweb="textarea"] textarea { font-size: 16px !important; }
     .stButton button { height: 3.5em; border-radius: 10px; font-weight: bold; }
     </style>
@@ -76,7 +67,6 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 with st.sidebar:
     st.title("🎤 Studio Controls")
     
-    # Scrollable Settings Container
     with st.container():
         st.subheader("Workshop Tools")
         lock_mode = st.checkbox("Lock Structure", value=True)
@@ -84,16 +74,8 @@ with st.sidebar:
         extend_mode = st.checkbox("Extend Bit", value=False)
         local_ref_mode = st.checkbox("Local Refs", value=False)
         
-        # Link-style help toggle
         if st.button("🔗 Quick Start Guide", kind="secondary"):
-            st.info("""
-            **Quick Start:**
-            - **Set Room:** Pick City, Venue, Audience.
-            - **Input:** Paste jokes in the main box.
-            - **Brainstorm:** Box blank + **Coach Mode** for 5 premises.
-            - **Run:** Hit 'Run Simulation'.
-            - **Save:** Download at the bottom of this menu!
-            """)
+            st.info("Set the Room, Paste your Bit, and hit Run. Use Coach Mode for premises!")
         
         st.markdown("---")
         st.subheader("Room Setup")
@@ -109,19 +91,37 @@ with st.sidebar:
         st.header("3. Age Range (Optional)")
         sel_ages = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
-    # Pinned Footer Container
     st.markdown('<div class="sidebar-footer">', unsafe_allow_html=True)
     st.subheader("Session Management")
     if "last_response" in st.session_state:
-        session_text = f"CITY: {st.session_state.get('last_city')}\n"
-        session_text += f"BIT:\n{st.session_state.get('last_bit')}\n\n"
-        session_text += f"FEEDBACK:\n{st.session_state['last_response']}"
-        
-        st.download_button("💾 Download This Session", data=session_text, file_name="comedy_set_feedback.txt", use_container_width=True)
+        st.download_button(
+            label="💾 Download This Session",
+            data=f"BIT: {st.session_state.get('last_bit')}\n\nFEEDBACK: {st.session_state.get('last_response')}",
+            file_name="comedy_set_feedback.txt",
+            use_container_width=True
+        )
     else:
         st.button("💾 Save (Run Simulation First)", disabled=True, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Simulator")
-bit_text = st.text_area("Paste your set here:",
+
+# THIS IS THE BOX THAT WAS CAUSING THE ERROR
+bit_text = st.text_area(
+    label="Paste your set here:", 
+    height=300, 
+    placeholder="Type your bit here..."
+)
+
+# --- 5. EXECUTION ---
+if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True):
+    if city.strip() and sel_venues:
+        try:
+            current_temp = 0.1 if lock_mode else 0.7
+            config = types.GenerateContentConfig(temperature=current_temp, top_p=0.95, max_output_tokens=3000)
+
+            instructions = []
+            if coach_mode: instructions.append("- Provide a 'COACH'S CORNER' feedback section.")
+            if extend_mode: instructions.append("- Provide 'THE NEXT 3 MINUTES' with expansion ideas.")
+            if local_ref_mode: instructions.append(f"- Provide 5 specific
