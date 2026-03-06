@@ -89,7 +89,7 @@ with st.sidebar:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 4. MAIN INTERFACE (RESTORED) ---
+# --- 4. MAIN INTERFACE ---
 st.title("🎤 Comedy Crowd Simulator")
 bit_text = st.text_area("Paste your set here:", height=300, placeholder="Type your bit here...")
 
@@ -123,9 +123,3 @@ if st.button("🚀 Run Simulation / Generate Prompts", use_container_width=True)
             
             instr_str = "\n".join(instr_list)
             venue_str = ", ".join(sel_venues)
-            aud_str = ", ".join(sel_audiences) if sel_audiences else "Mixed"
-
-            if not bit_text.strip():
-                final_prompt = "ACT AS A COMEDY WRITING PARTNER. Provide 5 premises for " + str(city_val) + " at " + str(venue_str) + ". " + str(instr_str)
-            else:
-                final_prompt = "ACT AS A COMEDY AUDIENCE SIMULATOR. Simulate: '" + str(bit_text) + "' for " + str
