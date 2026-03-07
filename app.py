@@ -4,7 +4,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Marquee Title + Yellow Tooltips
+# 1. CSS - Navy & Yellow + Marquee + Yellow Tooltips
 st.markdown("""<style>
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
@@ -57,20 +57,4 @@ with st.sidebar:
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
-        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
-
-# 4. MAIN UI
-t_html = "<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>"
-st.markdown(t_html, unsafe_allow_html=True)
-
-# Restored the label "Your Material:"
-bit = st.text_area("Your Material:", height=300, 
-    placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
-
-# 5. RUN LOGIC
-if st.button("🚀 RUN SIMULATION", use_container_width=True):
-    if city and sel_v:
-        fb = bit if bit.strip() != "" else "Suggest new premises."
-        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
-        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-        p = f"Act as audience. Venue: {sel_v}.
+        st.
