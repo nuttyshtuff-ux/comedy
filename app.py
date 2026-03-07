@@ -70,12 +70,9 @@ bit = st.text_area("Your Material:", height=300,
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
-        # Fixed logic for blank input
-        if bit.strip() == "":
-            fb = "I'm looking for a new premise. Suggest ideas for this crowd."
-        else:
-            fb = bit
-            
+        # Check for empty input
+        fb = bit if bit.strip() != "" else "Suggest new premises."
+        # Safe config
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}"
@@ -93,6 +90,12 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     else:
         st.warning("Select City and Venue!")
 
-# 6. DISPLAY
+# 6. DISPLAY - Triple Quotes to avoid f-string truncation
 if "last_res" in st.session_state:
-    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:
+    out_txt = st.session_state["last_res"]
+    st.markdown(f"""
+        <div class='response-card'>
+            <h3>🎭 The Crowd Reacts:</h3>
+            {out_txt}
+        </div>
+    """, unsafe_allow_html=True)
