@@ -47,8 +47,8 @@ with st.sidebar:
     st.success("✅ GUEST ACCESS ACTIVE")
     st.subheader("🛠️ Workshop Tools")
     
-    # Tooltips restored
-    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on logic.")
+    # Tooltips restored with safe variable names
+    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
     ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
     ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
     rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
@@ -61,13 +61,38 @@ with st.sidebar:
     sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
     
     st.markdown("---")
+    # THE FIX: Multiline button calls to prevent truncation
     if "last_res" in st.session_state:
-        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
+        st.download_button(
+            label="💾 DOWNLOAD SET",
+            data=st.session_state["last_res"],
+            file_name="set.txt",
+            use_container_width=True
+        )
     else:
-        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+        st.button(
+            label="💾 Save (Run First)",
+            disabled=True, 
+            use_container_width=True
+        )
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
 
-bit = st.text_area("Your Material:", height=300,
-                   
+bit = st.text_area(
+    "Your Material:", 
+    height=300, 
+    placeholder="Enter your joke or bit here... Or check Coach and leave blank for suggestions."
+)
+
+# 5. RUN LOGIC
+if st.button("🚀 RUN SIMULATION", use_container_width=True):
+    if city and sel_v:
+        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
+        success = False
+        for m_name in m_list:
+            try:
+                temp = 0.1 if lk else 0.7
+                cfg = types.GenerateContentConfig(
+                    temperature=temp, 
+                    top_p=0.95,
