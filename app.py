@@ -49,6 +49,9 @@ with st.sidebar:
     
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
+    # RESTORED: Caption for the City box
+    st.caption("Enter a City to get the Local Vibe")
+    
     sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
     v_score = st.slider("Tough <-> Loving", 1, 10, 5)
     sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
@@ -70,9 +73,7 @@ bit = st.text_area("Your Material:", height=300,
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
-        # Check for empty input
         fb = bit if bit.strip() != "" else "Suggest new premises."
-        # Safe config
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}"
@@ -90,7 +91,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     else:
         st.warning("Select City and Venue!")
 
-# 6. DISPLAY - Triple Quotes to avoid f-string truncation
+# 6. DISPLAY
 if "last_res" in st.session_state:
     out_txt = st.session_state["last_res"]
     st.markdown(f"""
