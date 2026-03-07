@@ -40,25 +40,18 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # 3. SIDEBAR
 with st.sidebar:
-    st.markdown("""
-        <div class="sidebar-header">
-            <div class="mic-container">
-                <div class="mic-head">🎙️</div>
-                <div class="mic-pole"></div>
-                <div class="mic-base"></div>
-            </div>
-            <h3 style="margin:0; letter-spacing: 1px;">STUDIO CONTROLS</h3>
-        </div>
-    """, unsafe_allow_html=True)
-    st.success("✅ GUEST ACCESS ACTIVE")
+    st.markdown("""<div class="sidebar-header"><div class="mic-container">
+    <div class="mic-head">🎙️</div><div class="mic-pole"></div><div class="mic-base"></div>
+    </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
     
+    st.success("✅ GUEST ACCESS ACTIVE")
     st.subheader("🛠️ Workshop Tools")
     
-    # RESTORED: Tooltips using the help parameter with a high-visibility trigger
-    lock_mode = st.checkbox("Lock Structure", value=True, help="Focuses AI on joke logic vs tangents.")
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Adds structural 'Coach's Corner' feedback.")
-    extend_mode = st.checkbox("Extend Bit", value=False, help="Brainstorms the next 3 mins of your set.")
-    local_ref_mode = st.checkbox("Local Refs", value=False, help="Includes city landmarks and local vibes.")
+    # Tooltips restored
+    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on logic.")
+    ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
+    ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
+    rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
     
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
@@ -69,6 +62,12 @@ with st.sidebar:
     
     st.markdown("---")
     if "last_res" in st.session_state:
-        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], file_name="comedy_set.txt", use_container_width=True)
+        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
-        st.button("💾 Save (Run First)", disabled=True
+        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+
+# 4. MAIN UI
+st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
+
+bit = st.text_area("Your Material:", height=300,
+                   
