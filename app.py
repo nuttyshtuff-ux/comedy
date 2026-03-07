@@ -16,7 +16,7 @@ st.markdown("""<style>
     [data-testid="stSidebar"] { background-color: #1e3a8a; }
     [data-testid="stSidebar"] * { color: #fef08a !important; }
     
-    /* THE YELLOW TOOLTIP TRICK */
+    /* THE YELLOW TOOLTIP FILTER */
     [data-testid="stWidgetLabel"] svg {
         filter: invert(86%) sepia(87%) saturate(356%) hue-rotate(352deg) brightness(102%) contrast(104%) !important;
     }
@@ -42,7 +42,6 @@ with st.sidebar:
     st.success("✅ GUEST ACCESS ACTIVE")
     st.subheader("🛠️ Workshop Tools")
     
-    # Tooltips with (?) trigger
     lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
     ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
     ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
@@ -54,6 +53,7 @@ with st.sidebar:
     v_score = st.slider("Tough <-> Loving", 1, 10, 5)
     sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
     sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
+    
     st.markdown("---")
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
@@ -62,14 +62,37 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-st.write("---") # Visual break to help the main pane feel "fuller"
+st.write("---")
 
-bit = st.text_area("Your Material:", height=300, placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
+bit = st.text_area("Your Material:", height=300, 
+    placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
 
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
-        # Define config on one line to prevent truncation
+        # Fixed logic for blank input
+        if bit.strip() == "":
+            fb = "I'm looking for a new premise. Suggest ideas for this crowd."
+        else:
+            fb = bit
+            
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-        fb = bit if bit.strip() != ""
+        p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}"
+        
+        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
+        for m_name in m_list:
+            try:
+                with st.spinner(f"Testing {m_name}..."):
+                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
+                    st.session_state["last_res"] = res.text
+                    st.rerun()
+            except Exception as e:
+                if "503" in str(e) and m_name != m_list[-1]: continue
+                st.error(f"Error: {e}"); break
+    else:
+        st.warning("Select City and Venue!")
+
+# 6. DISPLAY
+if "last_res" in st.session_state:
+    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:
