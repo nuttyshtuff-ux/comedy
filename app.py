@@ -62,14 +62,4 @@ with st.sidebar:
     
     sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
     v_score = st.slider("Tough <-> Loving", 1, 10, 5)
-    sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-    sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
-    
-    st.markdown("---")
-    if "last_res" in st.session_state:
-        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
-    else:
-        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
-
-# 4. MAIN UI
-st.markdown("<h1 class='main-title
+    sel_a = [a for a in AUDIENCES if
