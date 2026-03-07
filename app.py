@@ -21,6 +21,7 @@ st.markdown("""<style>
         font-size: 20px !important; border-radius: 12px !important;
     }
     [data-testid="stSidebar"] { background-color: #1e3a8a; }
+    /* Force all sidebar text to the soft yellow */
     [data-testid="stSidebar"] * { color: #fef08a !important; }
     .response-card {
         background-color: #eff6ff; border-left: 8px solid #facc15;
@@ -53,11 +54,19 @@ with st.sidebar:
     st.success("✅ GUEST ACCESS ACTIVE")
     
     st.subheader("🛠️ Workshop Tools")
-    # RESTORED: Tooltips via the 'help' parameter
-    lock_mode = st.checkbox("Lock Structure", value=True, help="Keeps the AI focused on your specific joke logic rather than wandering.")
-    coach_mode = st.checkbox("Coach Mode", value=False, help="Adds a technical 'Coach's Corner' with structural advice.")
-    extend_mode = st.checkbox("Extend Bit", value=False, help="Asks the AI to brainstorm the next 3 minutes of the set.")
-    local_ref_mode = st.checkbox("Local Refs", value=False, help="Forces the AI to include landmarks and vibes from your chosen city.")
+    
+    # Using Captions for High-Visibility Tooltips
+    lock_mode = st.checkbox("Lock Structure", value=True)
+    st.caption("Focuses AI on joke logic vs tangents.")
+    
+    coach_mode = st.checkbox("Coach Mode", value=False)
+    st.caption("Adds structural 'Coach's Corner' feedback.")
+    
+    extend_mode = st.checkbox("Extend Bit", value=False)
+    st.caption("Brainstorms the next 3 mins of your set.")
+    
+    local_ref_mode = st.checkbox("Local Refs", value=False)
+    st.caption("Includes city landmarks and local vibes.")
     
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
@@ -92,8 +101,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
                 cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
                 v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
                 
-                # Logic for blank input
-                final_bit = bit if bit.strip() != "" else "I'm looking for a new premise. Suggest some ideas for this crowd."
+                final_bit = bit if bit.strip() != "" else "Suggest new premises for this crowd."
                 
                 p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {final_bit}"
                 with st.spinner(f"🎤 Testing the room with {m_name}..."):
