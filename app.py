@@ -4,10 +4,18 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎤", layout="wide")
 
-# 1. CSS - Navy & Yellow High-Contrast Theme
+# 1. CSS - Navy & Yellow with Aligned Header Logic
 st.markdown("""<style>
     .main-title { color: #1e3a8a; font-weight: 800; text-align: center; }
-    .mic-icon { color: #facc15; font-size: 50px; text-align: center; margin-bottom: 10px; }
+    /* Flexbox to put Mic and Title on one line */
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .mic-small { color: #facc15; font-size: 28px; }
     .stButton button {
         background-color: #facc15 !important; color: #1e3a8a !important;
         border: 2px solid #1e3a8a !important; font-weight: bold !important;
@@ -33,8 +41,14 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # 3. SIDEBAR
 with st.sidebar:
-    st.markdown("<div class='mic-icon'>🎤</div>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>STUDIO CONTROLS</h3>", unsafe_allow_html=True)
+    # THE ALIGNED HEADER
+    st.markdown("""
+        <div class="sidebar-header">
+            <span class="mic-small">🎤</span>
+            <h3 style="margin:0;">STUDIO CONTROLS</h3>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.success("✅ GUEST ACCESS ACTIVE")
     
     st.subheader("🛠️ Workshop Tools")
@@ -58,7 +72,6 @@ with st.sidebar:
     st.header("4. Age Range")
     sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
     
-    # 4. SIDEBAR FOOTER (Save Feature Only)
     st.markdown("---")
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], file_name="comedy_set.txt", use_container_width=True)
@@ -67,7 +80,7 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎤 COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-bit = st.text_area("Your Material:", height=300, placeholder="Enter your jokes or bit here to see how your crowd will react...")
+bit = st.text_area("Your Material:", height=300, placeholder="Enter your jokes or bit here...")
 
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
