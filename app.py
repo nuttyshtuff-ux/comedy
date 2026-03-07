@@ -21,7 +21,6 @@ st.markdown("""<style>
         font-size: 20px !important; border-radius: 12px !important;
     }
     [data-testid="stSidebar"] { background-color: #1e3a8a; }
-    /* Force all sidebar text to the soft yellow */
     [data-testid="stSidebar"] * { color: #fef08a !important; }
     .response-card {
         background-color: #eff6ff; border-left: 8px solid #facc15;
@@ -55,18 +54,11 @@ with st.sidebar:
     
     st.subheader("🛠️ Workshop Tools")
     
-    # Using Captions for High-Visibility Tooltips
-    lock_mode = st.checkbox("Lock Structure", value=True)
-    st.caption("Focuses AI on joke logic vs tangents.")
-    
-    coach_mode = st.checkbox("Coach Mode", value=False)
-    st.caption("Adds structural 'Coach's Corner' feedback.")
-    
-    extend_mode = st.checkbox("Extend Bit", value=False)
-    st.caption("Brainstorms the next 3 mins of your set.")
-    
-    local_ref_mode = st.checkbox("Local Refs", value=False)
-    st.caption("Includes city landmarks and local vibes.")
+    # RESTORED: Tooltips using the help parameter with a high-visibility trigger
+    lock_mode = st.checkbox("Lock Structure", value=True, help="Focuses AI on joke logic vs tangents.")
+    coach_mode = st.checkbox("Coach Mode", value=False, help="Adds structural 'Coach's Corner' feedback.")
+    extend_mode = st.checkbox("Extend Bit", value=False, help="Brainstorms the next 3 mins of your set.")
+    local_ref_mode = st.checkbox("Local Refs", value=False, help="Includes city landmarks and local vibes.")
     
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
@@ -79,43 +71,4 @@ with st.sidebar:
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], file_name="comedy_set.txt", use_container_width=True)
     else:
-        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
-
-# 4. MAIN UI
-st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-
-bit = st.text_area(
-    "Your Material:", 
-    height=300, 
-    placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions."
-)
-
-# 5. RUN LOGIC
-if st.button("🚀 RUN SIMULATION", use_container_width=True):
-    if city and sel_v:
-        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
-        success = False
-        for m_name in m_list:
-            try:
-                temp = 0.1 if lock_mode else 0.7
-                cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
-                v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-                
-                final_bit = bit if bit.strip() != "" else "Suggest new premises for this crowd."
-                
-                p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {final_bit}"
-                with st.spinner(f"🎤 Testing the room with {m_name}..."):
-                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    st.session_state["last_res"] = res.text
-                    success = True; break
-            except Exception as e:
-                if "503" in str(e) and m_name != m_list[-1]: continue
-                st.error(f"Error: {e}"); break
-        if success: st.rerun()
-    else:
-        st.warning("Select City and Venue!")
-
-# 6. DISPLAY
-if "last_res" in st.session_state:
-    st.markdown("---")
-    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{st.session_state['last_res']}</div>", unsafe_allow_html=True)
+        st.button("💾 Save (Run First)", disabled=True
