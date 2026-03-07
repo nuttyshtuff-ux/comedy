@@ -1,4 +1,4 @@
-import st as st
+import streamlit as st
 from google import genai
 from google.genai import types
 
@@ -72,7 +72,4 @@ with st.sidebar:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
 
 # 4. MAIN UI
-st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-
-# Label is now an empty string to remove the "Your Material" text
-bit = st.text_area
+st.markdown("<h1 class='main-title
