@@ -4,7 +4,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow
+# 1. CSS - Navy & Yellow + YELLOW TOOLTIP FILTER
 st.markdown("""<style>
     .main-title { color: #1e3a8a; font-weight: 800; text-align: center; }
     .mic-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.8; margin-right: 10px; }
@@ -15,6 +15,12 @@ st.markdown("""<style>
     .stButton button { background-color: #facc15 !important; color: #1e3a8a !important; border: 2px solid #1e3a8a !important; font-weight: bold !important; border-radius: 12px !important; }
     [data-testid="stSidebar"] { background-color: #1e3a8a; }
     [data-testid="stSidebar"] * { color: #fef08a !important; }
+    
+    /* THE YELLOW TOOLTIP TRICK */
+    [data-testid="stWidgetLabel"] svg {
+        filter: invert(86%) sepia(87%) saturate(356%) hue-rotate(352deg) brightness(102%) contrast(104%) !important;
+    }
+    
     .response-card { background-color: #eff6ff; border-left: 8px solid #facc15; padding: 20px; border-radius: 10px; color: #1e3a8a; }
 </style>""", unsafe_allow_html=True)
 
@@ -35,10 +41,13 @@ with st.sidebar:
     </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
     st.success("✅ GUEST ACCESS ACTIVE")
     st.subheader("🛠️ Workshop Tools")
+    
+    # Tooltips with (?) trigger
     lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
     ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
     ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
     rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
+    
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
     sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
@@ -47,4 +56,20 @@ with st.sidebar:
     sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
     st.markdown("---")
     if "last_res" in st.session_state:
-        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt")
+        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
+    else:
+        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+
+# 4. MAIN UI
+st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
+st.write("---") # Visual break to help the main pane feel "fuller"
+
+bit = st.text_area("Your Material:", height=300, placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
+
+# 5. RUN LOGIC
+if st.button("🚀 RUN SIMULATION", use_container_width=True):
+    if city and sel_v:
+        # Define config on one line to prevent truncation
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
+        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
+        fb = bit if bit.strip() != ""
