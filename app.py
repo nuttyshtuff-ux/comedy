@@ -61,8 +61,10 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-bit = st.text_area("Your Material:", height=300, 
-    placeholder="Enter your joke or bit here... Or check Coach and leave blank for suggestions.")
+
+# UPDATED PLACEHOLDER
+instr = "Enter your joke or bit to see how your crowd might react. Or leave blank and check Coach for suggestions."
+bit = st.text_area("Your Material:", height=300, placeholder=instr)
 
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
@@ -80,3 +82,18 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
+        for m_name in m_list:
+            try:
+                with st.spinner("Analyzing Room..."):
+                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
+                    st.session_state["last_res"] = res.text
+                    st.rerun()
+            except Exception:
+                continue
+    else:
+        st.warning("Select City and Venue!")
+
+# 6. DISPLAY
+if "last_res" in st.session_state:
+    out_txt = st.session_state["last_res"]
+    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
