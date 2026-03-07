@@ -4,7 +4,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Marquee + Tooltip Filter
+# 1. CSS - Navy & Yellow + Marquee Title + Yellow Tooltips
 st.markdown("""<style>
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
@@ -39,19 +39,38 @@ AG = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 with st.sidebar:
     st.markdown("""<div class="sidebar-header"><div class="mic-container">
     <div class="mic-head">🎙️</div><div class="mic-pole"></div><div class="mic-base"></div>
-    </div><h3 style="margin:0;">STUDIO</h3></div>""", unsafe_allow_html=True)
-    
-    st.subheader("Tools")
-    lk = st.checkbox("Lock", value=True, help="Keeps AI on joke logic.")
-    ch = st.checkbox("Coach", value=False, help="Adds feedback.")
-    ex = st.checkbox("Extend", value=False, help="Next 3 mins.")
-    rf = st.checkbox("Local", value=False, help="City landmarks.")
-    
+    </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
+    st.success("✅ GUEST ACCESS ACTIVE")
+    st.subheader("🛠️ Workshop Tools")
+    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
+    ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
+    ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
+    rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
-    st.caption("Enter City for Local Vibe")
-    
-    st.header("Venue")
-    s_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
-    st.header("Vibe")
-    v_s =
+    st.caption("Enter a City to get the Local Vibe")
+    sel_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
+    v_score = st.slider("Tough <-> Loving", 1, 10, 5)
+    sel_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
+    sel_ag = [ag for ag in AG if st.checkbox(ag, key=f"ag_{ag}")]
+    st.markdown("---")
+    if "last_res" in st.session_state:
+        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
+    else:
+        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+
+# 4. MAIN UI
+t_html = "<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>"
+st.markdown(t_html, unsafe_allow_html=True)
+
+# Restored the label "Your Material:"
+bit = st.text_area("Your Material:", height=300, 
+    placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
+
+# 5. RUN LOGIC
+if st.button("🚀 RUN SIMULATION", use_container_width=True):
+    if city and sel_v:
+        fb = bit if bit.strip() != "" else "Suggest new premises."
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
+        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
+        p = f"Act as audience. Venue: {sel_v}.
