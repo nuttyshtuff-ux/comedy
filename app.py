@@ -5,6 +5,54 @@ from google.genai import types
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎤", layout="wide")
 
+# 2. TARGETED COLOR INJECTION (Clean & High Contrast)
+st.markdown("""
+<style>
+    /* Main Title & Accents */
+    .main-title {
+        color: #1e3a8a; /* Deep Navy Blue */
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 0px;
+    }
+    .mic-icon { color: #facc15; font-size: 50px; text-align: center; } /* Bright Yellow */
+    
+    /* The Run Button - Electric Yellow */
+    .stButton button {
+        background-color: #facc15 !important;
+        color: #1e3a8a !important;
+        border: 2px solid #1e3a8a !important;
+        font-weight: bold !important;
+        font-size: 20px !important;
+        border-radius: 12px !important;
+        transition: 0.3s all ease;
+    }
+    .stButton button:hover {
+        background-color: #1e3a8a !important;
+        color: #facc15 !important;
+        transform: translateY(-2px);
+    }
+
+    /* Sidebar - Professional Navy */
+    [data-testid="stSidebar"] {
+        background-color: #1e3a8a;
+        color: white;
+    }
+    [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] p, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        color: #fef08a !important; /* Soft Yellow text for sidebar headers */
+    }
+
+    /* Response Box - Soft Blue Wash */
+    .response-card {
+        background-color: #eff6ff;
+        border-left: 8px solid #facc15;
+        padding: 25px;
+        border-radius: 10px;
+        color: #1e3a8a;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # 2. CLIENT & DATA
 api_key = st.secrets.get("api_key")
 if not api_key:
@@ -16,10 +64,11 @@ VENUES = ["Underground Comedy", "The Comedy Shop", "Don't Tell", "The College Gi
 AUDIENCES = ["Normal", "Hostile", "Distracted", "Drunk", "Passive", "New to Comedy", "Skeptical", "Jaded", "Friendly", "Easily Offended", "Chatty", "Other Comics"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
-# 3. SIDEBAR (The Control Room)
+# 3. SIDEBAR
 with st.sidebar:
-    st.title("🎤 Studio Controls")
-    st.success("✅ Guest Access Active")
+    st.markdown("<div class='mic-icon'>🎤</div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>STUDIO</h2>", unsafe_allow_html=True)
+    st.success("✅ GUEST ACCESS ACTIVE")
     
     with st.container():
         st.subheader("🛠️ Tools")
@@ -33,13 +82,10 @@ with st.sidebar:
         
         st.header("1. Venue")
         sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
-        
         st.header("2. Crowd Vibe")
         v_score = st.slider("Tough <-> Loving", 1, 10, 5)
-        
         st.header("3. Audience Type")
         sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-        
         st.header("4. Age Range")
         sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
 
@@ -48,12 +94,14 @@ with st.sidebar:
     if "last_res" in st.session_state:
         st.download_button("💾 Download Set", data=st.session_state["last_res"], file_name="set.txt", use_container_width=True)
     
-    # PayPal Link
     donate_url = "https://www.paypal.com/paypalme/mrcoward"
-    st.markdown(f'[☕ Buy the Dev a Coffee]({donate_url})')
+    st.markdown(f'''<a href="{donate_url}" target="_blank" style="text-decoration: none;">
+            <div style="background-color: #facc15; color: #1e3a8a; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold;">
+                ☕ Buy the Dev a Coffee
+            </div></a>''', unsafe_allow_html=True)
 
-# 4. MAIN UI (High Legibility)
-st.markdown("# 🎤 Comedy Crowd Simulator")
+# 4. MAIN UI
+st.markdown("<h1 class='main-title'>🎤 COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
 st.write("---")
 
 bit = st.text_area(
@@ -65,32 +113,4 @@ bit = st.text_area(
 # 5. RUN LOGIC
 if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
-        models = ["gemini-3-flash-preview", "gemini-1.5-flash"]
-        success = False
-        for m_name in models:
-            try:
-                temp = 0.1 if lock_mode else 0.7
-                cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
-                v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-                p = f"Act as comedy audience. Venue: {', '.join(sel_v)}. City: {city}. Ages: {', '.join(sel_ag)}. Audience: {', '.join(sel_a)}. Rules: Crowd is {v_map[v_score]}. Bit: {bit}"
-                
-                with st.spinner(f"🎤 Testing the room via {m_name}..."):
-                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    st.session_state["last_res"] = res.text
-                    success = True
-                    break
-            except Exception as e:
-                if "503" in str(e) and m_name != models[-1]:
-                    st.warning("Crowd is rowdy (Server Busy)... pivoting.")
-                    continue
-                else:
-                    st.error(f"Error: {e}")
-                    break
-        if success: st.rerun()
-    else:
-        st.warning("Please select City and Venue!")
-
-# 6. DISPLAY (The "Stage")
-if "last_res" in st.session_state:
-    st.info("### 🎭 The Crowd Reacts:")
-    st.markdown(st.session_state["last_res"])
+        models = ["gemini-3
