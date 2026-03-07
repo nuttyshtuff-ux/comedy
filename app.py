@@ -4,7 +4,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Marquee + Yellow Tooltips
+# 1. CSS - Navy & Yellow + Marquee Title + Yellow Tooltips
 st.markdown("""<style>
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
@@ -57,4 +57,26 @@ with st.sidebar:
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
-        st.
+        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
+
+# 4. MAIN UI
+st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
+bit = st.text_area("Your Material:", height=300, 
+    placeholder="Enter your joke or bit here... Or check Coach and leave blank for suggestions.")
+
+# 5. RUN LOGIC
+if st.button("🚀 RUN SIMULATION", use_container_width=True):
+    if city and sel_v:
+        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
+        fb = bit if bit.strip() != "" else "Suggest new premises."
+        
+        # PROMPT BUILDING (VERTICAL TO PREVENT TRUNCATION)
+        p = "Act as audience. "
+        p += "Venue: " + str(sel_v) + ". "
+        p += "City: " + str(city) + ". "
+        p += "Ages: " + str(sel_ag) + ". "
+        p += "Rules: " + v_map[v_score] + ". "
+        p += "Bit: " + fb
+        
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
+        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
