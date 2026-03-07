@@ -4,7 +4,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + MARQUEE TITLE
+# 1. CSS - Navy & Yellow + Marquee + Tooltip Filter
 st.markdown("""<style>
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
@@ -25,7 +25,7 @@ st.markdown("""<style>
     .response-card { background-color: #eff6ff; border-left: 8px solid #facc15; padding: 20px; border-radius: 10px; color: #1e3a8a; }
 </style>""", unsafe_allow_html=True)
 
-# 2. DATA
+# 2. DATA SETUP
 api_key = st.secrets.get("api_key")
 if not api_key:
     st.error("Missing API Key!"); st.stop()
@@ -35,9 +35,27 @@ VENUES = ["Underground", "The Comedy Shop", "Don't Tell", "College Gig", "Dive B
 AUDIENCES = ["Normal", "Hostile", "Distracted", "Drunk", "Passive", "Skeptical", "Jaded", "Friendly", "Easily Offended", "Other Comics"]
 AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
-# 3. SIDEBAR
+# 3. SIDEBAR HEADER
 with st.sidebar:
     st.markdown("""<div class="sidebar-header"><div class="mic-container">
     <div class="mic-head">🎙️</div><div class="mic-pole"></div><div class="mic-base"></div>
     </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
-    st.
+    st.success("✅ GUEST ACCESS ACTIVE")
+    
+    st.subheader("🛠️ Workshop Tools")
+    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
+    ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
+    ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
+    rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
+    
+    st.markdown("---")
+    city = st.text_input("City", value="San Luis Obispo")
+    st.caption("Enter a City to get the Local Vibe")
+    
+    st.header("1. Venue")
+    sel_v = []
+    for v_item in VENUES:
+        if st.checkbox(v_item, key=f"v_{v_item}"):
+            sel_v.append(v_item)
+            
+    st.header("2
