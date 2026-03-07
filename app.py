@@ -4,9 +4,18 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + YELLOW TOOLTIP FILTER
+# 1. CSS - Navy & Yellow + NEW BORDERED TITLE
 st.markdown("""<style>
-    .main-title { color: #1e3a8a; font-weight: 800; text-align: center; }
+    .main-title { 
+        color: #1e3a8a; 
+        font-weight: 800; 
+        text-align: center; 
+        border: 3px solid #1e3a8a; 
+        padding: 20px; 
+        border-radius: 20px; 
+        background-color: #f8fbff;
+        margin-bottom: 25px;
+    }
     .mic-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.8; margin-right: 10px; }
     .mic-head { font-size: 24px; margin-bottom: -2px; }
     .mic-pole { background-color: #facc15; width: 3px; height: 12px; margin-bottom: -1px; }
@@ -49,7 +58,6 @@ with st.sidebar:
     
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
-    # RESTORED: Caption for the City box
     st.caption("Enter a City to get the Local Vibe")
     
     sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
@@ -65,7 +73,6 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-st.write("---")
 
 bit = st.text_area("Your Material:", height=300, 
     placeholder="Enter your joke or bit here to see how it might land with your crowd... Or check Coach and leave blank for suggestions.")
