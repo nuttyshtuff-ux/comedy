@@ -53,38 +53,5 @@ with st.sidebar:
     
     st.header("Venue")
     s_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
-            
     st.header("Vibe")
-    v_s = st.slider("Tough-Loving", 1, 10, 5)
-    
-    st.header("Crowd")
-    s_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
-            
-    st.header("Age")
-    s_g = [g for g in AG if st.checkbox(g, key=f"g_{g}")]
-    
-    st.markdown("---")
-    if "last_res" in st.session_state:
-        st.download_button("💾 SAVE SET", st.session_state["last_res"], "set.txt")
-    else:
-        st.button("💾 Save (Run First)", disabled=True)
-
-# 4. MAIN UI
-t_h = "<h1 class='main-title'>🎙️ COMEDY SIMULATOR</h1>"
-st.markdown(t_h, unsafe_allow_html=True)
-
-bit = st.text_area("", height=350, placeholder="Enter joke... Or check Coach and leave blank.")
-
-# 5. RUN LOGIC
-if st.button("🚀 RUN SIMULATION", use_container_width=True):
-    if city and s_v:
-        fb = bit if bit.strip() != "" else "Suggest new premises."
-        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
-        v_m = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-        p = f"Act as audience. Venue: {s_v}. City: {city}. Ages: {s_g}. Rules: {v_m[v_s]}. Bit: {fb}"
-        
-        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
-        for m_n in m_list:
-            try:
-                with st.spinner(f"Testing {m_n}..."):
-                    res = client.models.generate_content
+    v_s =
