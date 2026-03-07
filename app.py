@@ -2,20 +2,32 @@ import streamlit as st
 from google import genai
 from google.genai import types
 
-st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎤", layout="wide")
+st.set_page_config(page_title="Comedy Crowd Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow with Aligned Header Logic
+# 1. CSS - Navy & Yellow with Custom Mic Stand Construction
 st.markdown("""<style>
     .main-title { color: #1e3a8a; font-weight: 800; text-align: center; }
-    /* Flexbox to put Mic and Title on one line */
+    
+    /* Custom Mic Stand Construction */
+    .mic-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 0.8;
+        margin-right: 10px;
+    }
+    .mic-head { font-size: 24px; margin-bottom: -2px; }
+    .mic-pole { background-color: #facc15; width: 3px; height: 12px; margin-bottom: -1px; }
+    .mic-base { background-color: #facc15; width: 14px; height: 3px; border-radius: 2px; }
+
     .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
-    .mic-small { color: #facc15; font-size: 28px; }
+
     .stButton button {
         background-color: #facc15 !important; color: #1e3a8a !important;
         border: 2px solid #1e3a8a !important; font-weight: bold !important;
@@ -41,11 +53,15 @@ AGES = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # 3. SIDEBAR
 with st.sidebar:
-    # THE ALIGNED HEADER
+    # THE FULL MIC STAND HEADER
     st.markdown("""
         <div class="sidebar-header">
-            <span class="mic-small">🎤</span>
-            <h3 style="margin:0;">STUDIO CONTROLS</h3>
+            <div class="mic-container">
+                <div class="mic-head">🎙️</div>
+                <div class="mic-pole"></div>
+                <div class="mic-base"></div>
+            </div>
+            <h3 style="margin:0; letter-spacing: 1px;">STUDIO CONTROLS</h3>
         </div>
     """, unsafe_allow_html=True)
     
@@ -62,13 +78,10 @@ with st.sidebar:
     
     st.header("1. Venue")
     sel_v = [v for v in VENUES if st.checkbox(v, key=f"v_{v}")]
-    
     st.header("2. Crowd Vibe")
     v_score = st.slider("Tough <-> Loving", 1, 10, 5)
-    
     st.header("3. Audience Type")
     sel_a = [a for a in AUDIENCES if st.checkbox(a, key=f"a_{a}")]
-    
     st.header("4. Age Range")
     sel_ag = [ag for ag in AGES if st.checkbox(ag, key=f"ag_{ag}")]
     
@@ -79,7 +92,7 @@ with st.sidebar:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
 
 # 4. MAIN UI
-st.markdown("<h1 class='main-title'>🎤 COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
 bit = st.text_area("Your Material:", height=300, placeholder="Enter your jokes or bit here...")
 
 # 5. RUN LOGIC
@@ -93,7 +106,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
                 cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
                 v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
                 p = f"Act as audience. Venue: {sel_v}. City: {city}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {bit}"
-                with st.spinner(f"Testing {m_name}..."):
+                with st.spinner(f"🎤 Crowdsourcing feedback via {m_name}..."):
                     res = client.models.generate_content(model=m_name, contents=p, config=cfg)
                     st.session_state["last_res"] = res.text
                     success = True; break
