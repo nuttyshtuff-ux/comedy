@@ -32,7 +32,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 VN = ["Underground", "Comedy Shop", "Don't Tell", "College", "Dive Bar", "Upscale", "Showcase", "Open Mic", "Brewery", "Theater", "House", "Corp"]
-AU = ["Normal", "Hostile", "Drunk", "Passive", "Skeptical", "Jaded", "Friendly", "Offended", "Comics"]
+AU = ["Normal", "Hostile", "Drunk", "Passive", "Hopeful but Skeptical", "Jaded", "Friendly", "Easily Offended", "Other Comics Watching", "New to Live Comedy"]
 AG = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
 # 3. SIDEBAR
@@ -49,10 +49,18 @@ with st.sidebar:
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City to get the Local Vibe")
+    
+    st.subheader("Venue")
     sel_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
+    st.subheader("Crowd Vibe")
     v_score = st.slider("Tough <-> Loving", 1, 10, 5)
+    st.subheader("Audience Type")
     sel_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
+    
+    # RESTORED: Age Range Header
+    st.subheader("Age Range")
     sel_ag = [ag for ag in AG if st.checkbox(ag, key=f"ag_{ag}")]
+    
     st.markdown("---")
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
@@ -61,39 +69,7 @@ with st.sidebar:
 
 # 4. MAIN UI
 st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-
-# UPDATED PLACEHOLDER
 instr = "Enter your joke or bit to see how your crowd might react. Or leave blank and check Coach for suggestions."
 bit = st.text_area("Your Material:", height=300, placeholder=instr)
 
 # 5. RUN LOGIC
-if st.button("🚀 RUN SIMULATION", use_container_width=True):
-    if city and sel_v:
-        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
-        fb = bit if bit.strip() != "" else "Suggest new premises."
-        
-        # PROMPT BUILDING (VERTICAL TO PREVENT TRUNCATION)
-        p = "Act as audience. "
-        p += "Venue: " + str(sel_v) + ". "
-        p += "City: " + str(city) + ". "
-        p += "Ages: " + str(sel_ag) + ". "
-        p += "Rules: " + v_map[v_score] + ". "
-        p += "Bit: " + fb
-        
-        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
-        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
-        for m_name in m_list:
-            try:
-                with st.spinner("Analyzing Room..."):
-                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    st.session_state["last_res"] = res.text
-                    st.rerun()
-            except Exception:
-                continue
-    else:
-        st.warning("Select City and Venue!")
-
-# 6. DISPLAY
-if "last_res" in st.session_state:
-    out_txt = st.session_state["last_res"]
-    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
