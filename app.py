@@ -31,22 +31,11 @@ if not api_key:
     st.error("Missing API Key!"); st.stop()
 client = genai.Client(api_key=api_key)
 
-# RESTORED AND UPDATED VENUES
 VN = [
-    "Underground Comedy", 
-    "The Comedy Shop", 
-    "Don't Tell Comedy", 
-    "College Bar", 
-    "Dive Bar", 
-    "Upscale Bar", 
-    "Comedy Showcase", 
-    "Open Mic", 
-    "Craft Brewery", 
-    "Theater", 
-    "Corporate Mixer", 
-    "Elk's Lodge", 
-    "Toastmasters", 
-    "Casino Resort"
+    "Underground Comedy", "The Comedy Shop", "Don't Tell Comedy", 
+    "College Bar", "Dive Bar", "Upscale Bar", "Comedy Showcase", 
+    "Open Mic", "Craft Brewery", "Theater", "Corporate Mixer", 
+    "Elk's Lodge", "Toastmasters", "Casino Resort"
 ]
 
 AU = ["Normal", "Hostile", "Drunk", "Passive", "Hopeful but Skeptical", "Jaded", "Friendly", "Easily Offended", "Other Comics Watching", "New to Live Comedy"]
@@ -59,10 +48,17 @@ with st.sidebar:
     </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
     st.success("✅ GUEST ACCESS ACTIVE")
     st.subheader("🛠️ Workshop Tools")
-    lk = st.checkbox("Lock Structure", value=True, help="Keeps AI on joke logic.")
-    ch = st.checkbox("Coach Mode", value=False, help="Adds structural feedback.")
-    ex = st.checkbox("Extend Bit", value=False, help="Brainstorms next 3 mins.")
-    rf = st.checkbox("Local Refs", value=False, help="Includes city landmarks.")
+    
+    # UPDATED: More "Explainy" Tooltips
+    lk = st.checkbox("Lock Structure", value=True, 
+                     help="Forces the AI to strictly analyze the logic and punchlines of your bit rather than riffing or getting distracted.")
+    ch = st.checkbox("Coach Mode", value=False, 
+                     help="The AI will act as a veteran headliner, providing structural feedback and suggesting where to trim the fat or add a tag.")
+    ex = st.checkbox("Extend Bit", value=False, 
+                     help="Asks the AI to brainstorm the next 3 minutes of material based on the themes and characters introduced in your bit.")
+    rf = st.checkbox("Local Refs", value=False, 
+                     help="The AI will weave in specific landmarks, local inside jokes, and geographical references based on your chosen city.")
+    
     st.markdown("---")
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City to get the Local Vibe")
