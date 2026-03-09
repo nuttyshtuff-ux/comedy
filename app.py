@@ -88,7 +88,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
-        p = "Act as audience. "
+        p = "Act as audience. Give a long, detailed, multi-paragraph response. "
         p += "Venue: " + str(sel_v) + ". "
         p += "City: " + str(city) + ". "
         p += "Audience: " + str(sel_a) + ". "
