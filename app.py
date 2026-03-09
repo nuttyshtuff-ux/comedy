@@ -88,7 +88,9 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
-        p = "Act as audience. Give a detailed, response. "
+        p = "Act as audience. Give a detailed, 2-paragraph response: "
+        p += "Paragraph 1: Describe the specific atmosphere and the crowd's physical reaction. "
+        p += "Paragraph 2: Provide a specific heckle or a 'Coach' critique of the timing. "  
         p += "Venue: " + str(sel_v) + ". "
         p += "City: " + str(city) + ". "
         p += "Audience: " + str(sel_a) + ". "
@@ -115,5 +117,6 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 if "last_res" in st.session_state:
     out_txt = st.session_state["last_res"]
     st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
+
 
 
