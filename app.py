@@ -38,14 +38,14 @@ if st.button("🎤 DELIVER JOKE"):
         st.warning("Write a joke first!")
     else:
         with st.spinner("The crowd is leaning in..."):
-            # YOUR ORIGINAL CONFIG LOGIC
+            # BACK TO YOUR ORIGINAL CONFIG
             cfg = types.GenerateContentConfig(
                 temperature=(0.1 if lk else 0.7), 
                 top_p=0.95, 
                 max_output_tokens=2000
             )
             
-            # THE ONLY CHANGE: UPDATED MARCH 9th MODEL NAMES
+            # THE ONLY CHANGE: MARCH 9th STABLE NAMES
             m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
             
             p = f"React as a {crowd_type} (toughness {toughness}/10) to this joke: '{joke_input}'."
