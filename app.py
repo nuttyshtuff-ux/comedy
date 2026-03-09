@@ -1,100 +1,114 @@
 import streamlit as st
-import pandas as pd
 from google import genai
 from google.genai import types
 
-# 1. PAGE SETUP
-st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
+st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 2. CSS (Navy & Yellow - "Deep Dive" Theme)
-st.markdown("""
-<style>
-    .main { background-color: #f8fbff; }
-    .main-title { color: #1e3a8a; font-weight: 800; text-align: center; border: 3px solid #1e3a8a; padding: 20px; border-radius: 20px; background-color: #ffffff; margin-bottom: 30px; }
-    .stButton button { background-color: #facc15 !important; color: #1e3a8a !important; border: 2px solid #1e3a8a !important; font-weight: bold !important; border-radius: 12px !important; width: 100%; height: 3em; }
-    [data-testid="stSidebar"] { background-color: #1e3a8a !important; }
-    [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span { color: #ffffff !important; font-weight: 700 !important; }
-    .crowd-response { background-color: #eff6ff; border-left: 10px solid #facc15; padding: 25px; border-radius: 15px; color: #1e3a8a; margin-top: 20px; white-space: pre-wrap; font-size: 1.1em; }
-    .tooltip-box { background-color: #fef08a; padding: 15px; border-radius: 10px; color: #1e3a8a; border: 1px solid #facc15; margin-bottom: 20px; }
-</style>
-""", unsafe_allow_html=True)
+# 1. CSS - Navy & Yellow + Marquee Title + Yellow Tooltips
+st.markdown("""<style>
+    .main-title { 
+        color: #1e3a8a; font-weight: 800; text-align: center; 
+        border: 3px solid #1e3a8a; padding: 20px; border-radius: 20px; 
+        background-color: #f8fbff; margin-bottom: 30px;
+    }
+    .mic-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.8; margin-right: 10px; }
+    .mic-head { font-size: 24px; margin-bottom: -2px; }
+    .mic-pole { background-color: #facc15; width: 3px; height: 12px; margin-bottom: -1px; }
+    .mic-base { background-color: #facc15; width: 14px; height: 3px; border-radius: 2px; }
+    .sidebar-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .stButton button { background-color: #facc15 !important; color: #1e3a8a !important; border: 2px solid #1e3a8a !important; font-weight: bold !important; border-radius: 12px !important; }
+    [data-testid="stSidebar"] { background-color: #1e3a8a; }
+    [data-testid="stSidebar"] * { color: #fef08a !important; }
+    [data-testid="stWidgetLabel"] svg {
+        filter: invert(86%) sepia(87%) saturate(356%) hue-rotate(352deg) brightness(102%) contrast(104%) !important;
+    }
+    .response-card { background-color: #eff6ff; border-left: 8px solid #facc15; padding: 20px; border-radius: 10px; color: #1e3a8a; }
+</style>""", unsafe_allow_html=True)
 
-# 3. API SETUP
-try:
-    api_key = st.secrets["api_key"]
-    client = genai.Client(api_key=api_key)
-except Exception:
-    st.error("🔑 API Key Missing in Streamlit Secrets!")
-    st.stop()
+# 2. DATA
+api_key = st.secrets.get("api_key")
+if not api_key:
+    st.error("Missing API Key!"); st.stop()
+client = genai.Client(api_key=api_key)
 
-# 4. SIDEBAR - THE "SHOW RUNNER" SETTINGS
+VN = [
+    "Underground Comedy", "The Comedy Shop", "Don't Tell Comedy", 
+    "College Bar", "Dive Bar", "Upscale Bar", "Comedy Showcase", 
+    "Open Mic", "Craft Brewery", "Theater", "Corporate Mixer", 
+    "Elk's Lodge", "Toastmasters", "Casino Resort"
+]
+
+AU = ["Normal", "Hostile", "Drunk", "Passive", "Hopeful but Skeptical", "Jaded", "Friendly", "Easily Offended", "Other Comics Watching", "New to Live Comedy"]
+AG = ["Gen Z", "Millennials", "Gen X", "Boomers"]
+
+# 3. SIDEBAR
 with st.sidebar:
-    st.header("🏫 VENUE SETUP")
+    st.markdown("""<div class="sidebar-header"><div class="mic-container">
+    <div class="mic-head">🎙️</div><div class="mic-pole"></div><div class="mic-base"></div>
+    </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
+    st.success("✅ GUEST ACCESS ACTIVE")
+    st.subheader("🛠️ Workshop Tools")
     
-    city = st.text_input("City", value="San Luis Obispo", help="Where the show is taking place.")
-    venue_type = st.selectbox("Venue Type", ["Dive Bar", "Theater", "Casino", "Outdoor Festival", "Wine Cellar"])
+    # UPDATED: More "Explainy" Tooltips
+    lk = st.checkbox("Lock Structure", value=True, 
+                     help="Forces the AI to strictly analyze the logic and punchlines of your bit rather than riffing or getting distracted.")
+    ch = st.checkbox("Coach Mode", value=False, 
+                     help="The AI will act as a veteran headliner, providing structural feedback and suggesting where to trim the fat or add a tag.")
+    ex = st.checkbox("Extend Bit", value=False, 
+                     help="Asks the AI to brainstorm the next 3 minutes of material based on the themes and characters introduced in your bit.")
+    rf = st.checkbox("Local Refs", value=False, 
+                     help="The AI will weave in specific landmarks, local inside jokes, and geographical references based on your chosen city.")
     
     st.markdown("---")
+    city = st.text_input("City", value="San Luis Obispo")
+    st.caption("Enter a City to get the Local Vibe")
     
-    st.subheader("👥 Audience Makeup")
-    crowd_vibe = st.selectbox("Crowd Vibe", ["Supportive", "Indifferent", "Hostile", "Rowdy", "Intellectual"])
-    age_range = st.select_slider("Main Age Group", options=["Gen Z", "Millennials", "Gen X", "Boomers"], value="Millennials")
+    st.subheader("Venue")
+    sel_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
+    st.subheader("Crowd Vibe")
+    v_score = st.slider("Tough <-> Loving", 1, 10, 5)
+    st.subheader("Audience Type")
+    sel_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
+    st.subheader("Age Range")
+    sel_ag = [ag for ag in AG if st.checkbox(ag, key=f"ag_{ag}")]
     
     st.markdown("---")
-    
-    # THE "DEEP DIVE" TOOLTIP FEATURES
-    st.subheader("🛠️ SIMULATOR MODES")
-    lk = st.checkbox("Lock Structure", help="Keep the AI from rewriting your setup; focus only on the punchline.")
-    coach_mode = st.checkbox("Coach Mode", help="Get a 'Professor' style critique along with the crowd reaction.")
-    local_refs = st.checkbox("Local Refs", help="Force the AI to mention local SLO landmarks or culture.")
-
-# 5. MAIN UI
-st.markdown("<h1 class='main-title'>🎤 COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="tooltip-box">
-    <strong>💡 Pro-Tip:</strong> Use 'Coach Mode' if you're prepping for a pedagogical reflection on your set.
-</div>
-""", unsafe_allow_html=True)
-
-joke_input = st.text_area("Your Bit / Lesson Opener:", height=300, placeholder="Paste your bit here...")
-
-# 6. RUN THE SIMULATION
-if st.button("🚀 DELIVER TO CROWD"):
-    if not joke_input:
-        st.warning("The mic is live, but you're not speaking! Paste a bit.")
+    if "last_res" in st.session_state:
+        st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
-        with st.spinner("The room is sizing you up..."):
-            # Temperature logic
-            temp = 0.1 if lk else 0.7
-            cfg = types.GenerateContentConfig(temperature=temp, top_p=0.95, max_output_tokens=2000)
-            
-            # Prompt building
-            p = f"You are a {crowd_vibe} crowd at a {venue_type} in {city}. Most are {age_range}. "
-            if local_refs: p += "Include specific local SLO references or landmarks. "
-            if coach_mode: p += "Provide a pedagogical critique like a Cal Poly Professor. "
-            p += f"React to this comedy bit: '{joke_input}'."
+        st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
 
-            # MARCH 9th MODEL FIX - Stable models only
-            success = False
-            for model_name in ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]:
-                try:
-                    response = client.models.generate_content(model=model_name, contents=p, config=cfg)
-                    st.session_state["sim_result"] = response.text
-                    success = True
-                    break
-                except:
-                    continue
-            
-            if success:
-                st.rerun()
-            else:
-                st.error("The mic is dead (API Connection Error). Try again in a minute.")
+# 4. MAIN UI
+st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
+instr = "Enter your joke or bit to see how your crowd might react. Or leave blank and check Coach for suggestions."
+bit = st.text_area("Your Material:", height=300, placeholder=instr)
 
-# 7. RESULTS
-if "sim_result" in st.session_state:
-    st.markdown(f'<div class="crowd-response"><h3>📣 THE REACTION:</h3>{st.session_state["sim_result"]}</div>', unsafe_allow_html=True)
-    
-    if st.button("Clear Stage"):
-        del st.session_state["sim_result"]
-        st.rerun()
+# 5. RUN LOGIC
+if st.button("🚀 RUN SIMULATION", use_container_width=True):
+    if city and sel_v:
+        v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
+        fb = bit if bit.strip() != "" else "Suggest new premises."
+        p = "Act as audience. "
+        p += "Venue: " + str(sel_v) + ". "
+        p += "City: " + str(city) + ". "
+        p += "Audience: " + str(sel_a) + ". "
+        p += "Ages: " + str(sel_ag) + ". "
+        p += "Rules: " + v_map[v_score] + ". "
+        p += "Bit: " + fb
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
+        m_list = ["gemini-3-flash-preview", "gemini-1.5-flash"]
+        for m_name in m_list:
+            try:
+                with st.spinner("Analyzing Room..."):
+                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
+                    st.session_state["last_res"] = res.text
+                    st.rerun()
+            except Exception:
+                continue
+    else:
+        st.warning("Select City and Venue!")
+
+# 6. DISPLAY
+if "last_res" in st.session_state:
+    out_txt = st.session_state["last_res"]
+    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
