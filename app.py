@@ -4,14 +4,17 @@ from google import genai
 from google.genai import types
 
 # 1. PAGE SETUP
-st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="centered")
+st.set_page_config(page_title="Comedy Crowd Sim", page_icon="🎤", layout="wide")
 
-# 2. THE CUSTOM LOOK
+# 2. CSS (Navy & Yellow - "Deep Dive" Theme)
 st.markdown("""
 <style>
-    .main { background-color: #0e1117; color: #ffffff; }
-    .stTextArea textarea { background-color: #161b22; color: #ffffff; border: 1px solid #30363d; }
-    .crowd-response { background-color: #1f2937; border-left: 5px solid #facc15; padding: 20px; border-radius: 10px; margin-top: 20px; font-style: italic; color: #ffffff; }
+    .main { background-color: #f8fbff; }
+    .main-title { color: #1e3a8a; font-weight: 800; text-align: center; border: 3px solid #1e3a8a; padding: 20px; border-radius: 20px; background-color: #ffffff; margin-bottom: 30px; }
+    .stButton button { background-color: #facc15 !important; color: #1e3a8a !important; border: 2px solid #1e3a8a !important; font-weight: bold !important; border-radius: 12px !important; width: 100%; height: 3em; }
+    [data-testid="stSidebar"] { background-color: #1e3a8a !important; color: white !important; }
+    .crowd-response { background-color: #eff6ff; border-left: 10px solid #facc15; padding: 25px; border-radius: 15px; color: #1e3a8a; margin-top: 20px; white-space: pre-wrap; font-size: 1.1em; }
+    .tooltip-box { background-color: #fef08a; padding: 10px; border-radius: 8px; font-size: 0.9em; color: #1e3a8a; border: 1px solid #facc15; margin-bottom: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -23,68 +26,42 @@ except Exception:
     st.error("🔑 API Key Missing!")
     st.stop()
 
-# 4. SIDEBAR - CITY, VENUE, & CROWD
+# 4. SIDEBAR - THE "SHOW RUNNER" SETTINGS
 with st.sidebar:
-    st.title("🎟️ SHOW RUNNER")
+    st.header("🏫 CLASSROOM/VENUE SETUP")
     
-    # CITY & VENUE
-    city = st.text_input("City", value="San Luis Obispo")
-    venue = st.selectbox("Venue", ["The Elk's Lodge", "Casino Resort", "The Dark Room", "Outdoor Festival", "Wine Cellar"])
+    city = st.text_input("City", value="San Luis Obispo", help="Where the show is taking place.")
+    venue_type = st.selectbox("Venue Type", ["Dive Bar", "Theater", "Casino", "Outdoor Festival", "Wine Cellar"])
     
     st.markdown("---")
     
-    # CROWD DYNAMICS
-    crowd_type = st.selectbox("Crowd Type", ["Bachelorette Party", "Comedy Nerds", "Drunk Hecklers", "Corporate Retreat", "Angry Locals"])
-    toughness = st.slider("Crowd Toughness", 1, 10, 5)
-    lk = st.checkbox("Dry/Deadpan Mode")
+    st.subheader("👥 Audience Makeup")
+    crowd_vibe = st.selectbox("Crowd Vibe", ["Supportive", "Indifferent", "Hostile", "Rowdy", "Intellectual"])
+    age_range = st.select_slider("Main Age Group", options=["Gen Z", "Millennials", "Gen X", "Boomers"], value="Millennials")
+    
+    st.markdown("---")
+    
+    # THE "DEEP DIVE" TOOLTIP FEATURES
+    st.subheader("🛠️ SIMULATOR MODES")
+    lk = st.checkbox("Lock Structure", help="Keep the AI from rewriting your setup; focus only on the punchline.")
+    coach_mode = st.checkbox("Coach Mode", help="Get a 'Professor' style critique along with the crowd reaction.")
+    local_refs = st.checkbox("Local Refs", help="Force the AI to mention local SLO landmarks or culture.")
 
-# 5. THE STAGE
-st.title("🎤 COMEDY CROWD SIM")
-st.markdown(f"**Live at {venue} in {city}**")
+# 5. MAIN UI
+st.markdown("<h1 class='main-title'>🎤 COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
 
-joke_input = st.text_area("Drop your bit or one-liner here:", height=200)
+# Placeholder Instructions
+st.markdown("""
+<div class="tooltip-box">
+    <strong>💡 Pro-Tip:</strong> Use 'Coach Mode' if you're prepping for a TPA-style pedagogical reflection on your set.
+</div>
+""", unsafe_allow_html=True)
 
-# 6. THE PERFORMANCE
-if st.button("🎤 DELIVER JOKE"):
+joke_input = st.text_area("Your Bit / Lesson Opener:", height=300, placeholder="Paste your bit here...")
+
+# 6. RUN THE SIMULATION
+if st.button("🚀 DELIVER TO CROWD"):
     if not joke_input:
-        st.warning("Write a joke first!")
+        st.warning("The mic is live, but you're not speaking! Paste a bit.")
     else:
-        with st.spinner(f"The crowd at {venue} is leaning in..."):
-            # YOUR CONFIG
-            cfg = types.GenerateContentConfig(
-                temperature=(0.1 if lk else 0.7), 
-                top_p=0.95, 
-                max_output_tokens=2000
-            )
-            
-            # THE MARCH 9th MODEL FIX
-            m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
-            
-            p = f"You are a {crowd_type} at {venue} in {city}. "
-            p += f"Crowd toughness is {toughness}/10. React to this joke: '{joke_input}'."
-
-            success = False
-            for model_name in m_list:
-                try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=p,
-                        config=cfg
-                    )
-                    st.session_state["crowd_feedback"] = response.text
-                    success = True
-                    break
-                except Exception:
-                    continue
-            
-            if success:
-                st.rerun()
-            else:
-                st.error("The mic cut out! (API Error)")
-
-# 7. THE HECKLE
-if "crowd_feedback" in st.session_state:
-    st.markdown(f'<div class="crowd-response">{st.session_state["crowd_feedback"]}</div>', unsafe_allow_html=True)
-    if st.button("Try a New Bit"):
-        del st.session_state["crowd_feedback"]
-        st.rerun()
+        with st.spinner("The room is sizing you up
