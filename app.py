@@ -88,7 +88,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
-        p = "Act as audience. "
+        p = "Act as audience. Give a long, detailed, multi-paragraph response. "
         p += "Venue: " + str(sel_v) + ". "
         p += "City: " + str(city) + ". "
         p += "Audience: " + str(sel_a) + ". "
@@ -96,22 +96,3 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         p += "Rules: " + v_map[v_score] + ". "
         p += "Bit: " + fb
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
-        
-        # SURGICAL SWAP: Replacing retired models with March 9th Stable versions
-        m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
-        
-        for m_name in m_list:
-            try:
-                with st.spinner("Analyzing Room..."):
-                    res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    st.session_state["last_res"] = res.text
-                    st.rerun()
-            except Exception:
-                continue
-    else:
-        st.warning("Select City and Venue!")
-
-# 6. DISPLAY
-if "last_res" in st.session_state:
-    out_txt = st.session_state["last_res"]
-    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
