@@ -47,9 +47,27 @@ with st.sidebar:
     <div class="mic-head">🎙️</div><div class="mic-pole"></div><div class="mic-base"></div>
     </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
     st.success("✅ GUEST ACCESS ACTIVE")
-    st.subheader("🛠️ Workshop Tools")
     
-    # UPDATED: More "Explainy" Tooltips
+    # 3a. LOCATION & VENUE (Moved up)
+    city = st.text_input("City", value="San Luis Obispo")
+    st.caption("Enter a City to get the Local Vibe")
+    
+    st.subheader("Venue")
+    sel_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
+    
+    st.subheader("Crowd Vibe")
+    v_score = st.slider("Tough <-> Loving", 1, 10, 5)
+    
+    st.subheader("Audience Type")
+    sel_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
+    
+    st.subheader("Age Range")
+    sel_ag = [ag for ag in AG if st.checkbox(ag, key=f"ag_{ag}")]
+    
+    st.markdown("---")
+    
+    # 3b. WORKSHOP TOOLS (Moved down)
+    st.subheader("🛠️ Workshop Tools")
     lk = st.checkbox("Lock Structure", value=True, 
                      help="Forces the AI to strictly analyze the logic and punchlines of your bit rather than riffing or getting distracted.")
     ch = st.checkbox("Coach Mode", value=False, 
@@ -60,19 +78,8 @@ with st.sidebar:
                      help="The AI will weave in specific landmarks, local inside jokes, and geographical references based on your chosen city.")
     
     st.markdown("---")
-    city = st.text_input("City", value="San Luis Obispo")
-    st.caption("Enter a City to get the Local Vibe")
     
-    st.subheader("Venue")
-    sel_v = [v for v in VN if st.checkbox(v, key=f"v_{v}")]
-    st.subheader("Crowd Vibe")
-    v_score = st.slider("Tough <-> Loving", 1, 10, 5)
-    st.subheader("Audience Type")
-    sel_a = [a for a in AU if st.checkbox(a, key=f"a_{a}")]
-    st.subheader("Age Range")
-    sel_ag = [ag for ag in AG if st.checkbox(ag, key=f"ag_{ag}")]
-    
-    st.markdown("---")
+    # 3c. SAVE/DOWNLOAD
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
@@ -100,7 +107,6 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         p += "Bit: " + fb
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         
-        # SURGICAL SWAP: Replacing retired models with March 9th Stable versions
         m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
         
         for m_name in m_list:
@@ -118,7 +124,3 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 if "last_res" in st.session_state:
     out_txt = st.session_state["last_res"]
     st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
-
-
-
-
