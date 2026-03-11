@@ -92,26 +92,20 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
     if city and sel_v:
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
-        p = "Act as audience. Give a detailed, 2-paragraph response: "
-        p += "CRITICAL INSTRUCTION: You MUST provide a response in at least two distinct paragraphs. "
-        p += "Paragraph 1: Describe the specific atmosphere and the crowd's physical reaction. "
-        p += "Paragraph 2: Provide a specific heckle or a 'Coach' critique of the timing. "  
         
-        # SURGICAL ADDITION: Connection Workshop Tools to the actual Prompt
-        if ex:
-            p += "EXTENSION REQUEST: Also brainstorm and write the next 3 minutes of this comedy bit based on the established themes. "
+        # 5a. PROMPT CONSTRUCTION
+        p = f"Act as the audience. Venue: {sel_v}. City: {city}. Audience: {sel_a}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}. "
+        p += "Provide a detailed 2-paragraph audience reaction. "
+        
         if rf:
-            p += f"LOCALIZATION: Incorporate specific landmarks and inside jokes for {city}. "
+            p += f"LOCALIZATION: Incorporate specific landmarks and local inside jokes for {city}. "
         if ch:
-            p += "COACHING: Be extra critical of the structure and suggest tags. "
+            p += "COACHING: Add a section titled 'COACH FEEDBACK' with structural tips and potential tags. "
+        if ex:
+            p += "EXTENSION: Add a section titled 'EXTENDED MATERIAL' and write 3 minutes of new jokes based on these themes. "
             
-        p += "Venue: " + str(sel_v) + ". "
-        p += "City: " + str(city) + ". "
-        p += "Audience: " + str(sel_a) + ". "
-        p += "Ages: " + str(sel_ag) + ". "
-        p += "Rules: " + v_map[v_score] + ". "
-        p += "Bit: " + fb
-        
+        p += "CRITICAL: Ensure every requested section (Reaction, Coaching, Extension) is clearly labeled and fully written."
+
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
         
