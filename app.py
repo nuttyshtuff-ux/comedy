@@ -48,7 +48,6 @@ with st.sidebar:
     </div><h3 style="margin:0;">STUDIO CONTROLS</h3></div>""", unsafe_allow_html=True)
     st.success("✅ GUEST ACCESS ACTIVE")
     
-    # 3a. LOCATION & VENUE (Moved up)
     city = st.text_input("City", value="San Luis Obispo")
     st.caption("Enter a City to get the Local Vibe")
     
@@ -66,7 +65,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3b. WORKSHOP TOOLS (Moved down)
     st.subheader("🛠️ Workshop Tools")
     lk = st.checkbox("Lock Structure", value=True, 
                      help="Forces the AI to strictly analyze the logic and punchlines of your bit rather than riffing or getting distracted.")
@@ -79,7 +77,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3c. SAVE/DOWNLOAD
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
@@ -99,14 +96,23 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         p += "CRITICAL INSTRUCTION: You MUST provide a response in at least two distinct paragraphs. "
         p += "Paragraph 1: Describe the specific atmosphere and the crowd's physical reaction. "
         p += "Paragraph 2: Provide a specific heckle or a 'Coach' critique of the timing. "  
+        
+        # SURGICAL ADDITION: Connection Workshop Tools to the actual Prompt
+        if ex:
+            p += "EXTENSION REQUEST: Also brainstorm and write the next 3 minutes of this comedy bit based on the established themes. "
+        if rf:
+            p += f"LOCALIZATION: Incorporate specific landmarks and inside jokes for {city}. "
+        if ch:
+            p += "COACHING: Be extra critical of the structure and suggest tags. "
+            
         p += "Venue: " + str(sel_v) + ". "
         p += "City: " + str(city) + ". "
         p += "Audience: " + str(sel_a) + ". "
         p += "Ages: " + str(sel_ag) + ". "
         p += "Rules: " + v_map[v_score] + ". "
         p += "Bit: " + fb
-        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
         
         for m_name in m_list:
