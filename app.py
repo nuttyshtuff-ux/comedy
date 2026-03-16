@@ -77,6 +77,7 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # SURGICAL FIX: The Download Button now pulls the full session state
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
@@ -113,7 +114,12 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
             try:
                 with st.spinner("Analyzing Room..."):
                     res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    st.session_state["last_res"] = res.text
+                    
+                    # SURGICAL FIX: Bundle the original bit WITH the AI response
+                    full_save_text = f"--- YOUR BIT ---\n\n{bit}\n\n"
+                    full_save_text += f"--- AI FEEDBACK & ANALYSIS ---\n\n{res.text}"
+                    
+                    st.session_state["last_res"] = full_save_text
                     st.rerun()
             except Exception:
                 continue
@@ -122,5 +128,6 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 
 # 6. DISPLAY
 if "last_res" in st.session_state:
-    out_txt = st.session_state["last_res"]
-    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{out_txt}</div>""", unsafe_allow_html=True)
+    # We display only the AI part in the UI card to keep it clean, but the download button has the whole set
+    display_text = st.session_state["last_res"].split("--- AI FEEDBACK & ANALYSIS ---")[-1]
+    st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>""", unsafe_allow_html=True)
