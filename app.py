@@ -114,4 +114,4 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 # 6. DISPLAY
 if "last_res" in st.session_state:
     display_text = st.session_state["last_res"].split("--- FEEDBACK ---")[-1]
-    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>", unsafe_allow_html=True)h
+    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>", unsafe_allow_html=True)
