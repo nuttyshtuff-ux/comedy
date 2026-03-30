@@ -4,28 +4,24 @@ from google import genai
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Sidebar Recovery Fix
+# 1. CSS - Navy & Yellow + Targeted Toolbar Hide
 st.markdown("""<style>
-    /* 1a. THE SURGICAL HIDE - Keeps the sidebar button but kills the icons */
-    #MainMenu {visibility: hidden !important;}
+    /* 1a. KILL BRANDING & FOOTER */
     footer {visibility: hidden !important;}
     
-    /* Instead of 'display: none', we make the header invisible so the sidebar button still works */
-    header {
-        visibility: hidden !important;
-        background: rgba(0,0,0,0) !important;
-    }
-
-    /* Specifically target the 'Crown/Avatar' to make them unclickable and invisible */
+    /* Hide the entire toolbar (Fork, Crown, Avatar) */
     .stAppToolbar {
-        visibility: hidden !important;
-        pointer-events: none !important;
+        display: none !important;
     }
 
-    /* FORCE the sidebar toggle to be visible again */
-    [data-testid="stHeader"] button {
+    /* Ensure the Header exists but is transparent */
+    [data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0) !important;
+    }
+
+    /* FORCE the sidebar toggle button to stay visible */
+    [data-testid="stHeader"] > div:first-child {
         visibility: visible !important;
-        color: #1e3a8a !important; /* Makes the arrow Navy so you can see it */
     }
 
     /* 1b. YOUR ORIGINAL STYLING */
