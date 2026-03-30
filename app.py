@@ -4,12 +4,29 @@ from google.genai import types
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Marquee Title + Yellow Tooltips
+# 1. CSS - Navy & Yellow + Header Support Button
 st.markdown("""<style>
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
         border: 3px solid #1e3a8a; padding: 20px; border-radius: 20px; 
         background-color: #f8fbff; margin-bottom: 30px;
+    }
+    /* The Header Support Link */
+    .header-support {
+        display: inline-block;
+        margin-top: 15px;
+        background-color: #facc15;
+        color: #1e3a8a !important;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: bold;
+        text-decoration: none;
+        border: 2px solid #1e3a8a;
+        font-size: 14px;
+    }
+    .header-support:hover {
+        background-color: #fde047;
+        text-decoration: none;
     }
     .mic-container { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 0.8; margin-right: 10px; }
     .mic-head { font-size: 24px; margin-bottom: -2px; }
@@ -31,13 +48,7 @@ if not api_key:
     st.error("Missing API Key!"); st.stop()
 client = genai.Client(api_key=api_key)
 
-VN = [
-    "Underground Comedy", "The Comedy Shop", "Don't Tell Comedy", 
-    "College Bar", "Dive Bar", "Upscale Bar", "Comedy Showcase", 
-    "Open Mic", "Craft Brewery", "Theater", "Corporate Mixer", 
-    "Elk's Lodge", "Toastmasters", "Casino Resort"
-]
-
+VN = ["Underground Comedy", "The Comedy Shop", "Don't Tell Comedy", "College Bar", "Dive Bar", "Upscale Bar", "Comedy Showcase", "Open Mic", "Craft Brewery", "Theater", "Corporate Mixer", "Elk's Lodge", "Toastmasters", "Casino Resort"]
 AU = ["Normal", "Hostile", "Drunk", "Passive", "Hopeful but Skeptical", "Jaded", "Friendly", "Easily Offended", "Other Comics Watching", "New to Live Comedy"]
 AG = ["Gen Z", "Millennials", "Gen X", "Boomers"]
 
@@ -66,14 +77,10 @@ with st.sidebar:
     st.markdown("---")
     
     st.subheader("🛠️ Workshop Tools")
-    lk = st.checkbox("Lock Structure", value=True, 
-                     help="Forces the AI to strictly analyze the logic and punchlines of your bit rather than riffing or getting distracted.")
-    ch = st.checkbox("Coach Mode", value=False, 
-                     help="The AI will act as a veteran headliner, providing structural feedback and suggesting where to trim the fat or add a tag.")
-    ex = st.checkbox("Extend Bit", value=False, 
-                     help="Asks the AI to brainstorm the next 3 minutes of material based on the themes and characters introduced in your bit.")
-    rf = st.checkbox("Local Refs", value=False, 
-                     help="The AI will weave in specific landmarks, local inside jokes, and geographical references based on your chosen city.")
+    lk = st.checkbox("Lock Structure", value=True, help="Forces logic analysis.")
+    ch = st.checkbox("Coach Mode", value=False, help="Veteran feedback.")
+    ex = st.checkbox("Extend Bit", value=False, help="Next 3 minutes.")
+    rf = st.checkbox("Local Refs", value=False, help="Local jokes.")
     
     st.markdown("---")
     
@@ -83,8 +90,15 @@ with st.sidebar:
         st.button("💾 Save (Run First)", disabled=True, use_container_width=True)
 
 # 4. MAIN UI
-st.markdown("<h1 class='main-title'>🎙️ COMEDY CROWD SIMULATOR</h1>", unsafe_allow_html=True)
-instr = "Enter your joke or bit to see how your crowd might react. Or leave blank and check Coach for suggestions."
+paypal_url = "https://www.paypal.me/YOUR_USERNAME" # <--- SWAP THIS WITH YOUR LINK
+st.markdown(f"""
+    <div class='main-title'>
+        <h1>🎙️ COMEDY CROWD SIMULATOR</h1>
+        <a href="{paypal_url}" target="_blank" class="header-support">💰 Support the Comic</a>
+    </div>
+""", unsafe_allow_html=True)
+
+instr = "Enter your joke or bit to see how your crowd might react."
 bit = st.text_area("Your Material:", height=300, placeholder=instr)
 
 # 5. RUN LOGIC
@@ -93,19 +107,11 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
         
-        # 5a. PROMPT CONSTRUCTION
-        p = f"Act as the audience. Venue: {sel_v}. City: {city}. Audience: {sel_a}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}. "
-        p += "Provide a detailed 2-paragraph audience reaction. "
-        
-        if rf:
-            p += f"LOCALIZATION: Incorporate specific landmarks and local inside jokes for {city}. "
-        if ch:
-            p += "COACHING: Add a section titled 'COACH FEEDBACK' with structural tips and potential tags. "
-        if ex:
-            p += "EXTENSION: Add a section titled 'EXTENDED MATERIAL' and write 3 minutes of new jokes based on these themes. "
+        p = f"Act as the audience. Venue: {sel_v}. City: {city}. Audience: {sel_a}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}. Provide a detailed 2-paragraph audience reaction."
+        if rf: p += f" LOCALIZATION: {city} refs. "
+        if ch: p += " COACHING: structural tips. "
+        if ex: p += " EXTENSION: 3 mins new material. "
             
-        p += "CRITICAL: Ensure every requested section (Reaction, Coaching, Extension) is clearly labeled and fully written."
-
         cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
         m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
         
@@ -113,12 +119,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
             try:
                 with st.spinner("Analyzing Room..."):
                     res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    
-                    # Bundling original bit with AI response for the download
-                    full_save_text = f"--- YOUR BIT ---\n\n{bit}\n\n"
-                    full_save_text += f"--- AI FEEDBACK & ANALYSIS ---\n\n{res.text}"
-                    
-                    st.session_state["last_res"] = full_save_text
+                    st.session_state["last_res"] = f"--- BIT ---\n\n{bit}\n\n--- FEEDBACK ---\n\n{res.text}"
                     st.rerun()
             except Exception:
                 continue
@@ -127,5 +128,5 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 
 # 6. DISPLAY
 if "last_res" in st.session_state:
-    display_text = st.session_state["last_res"].split("--- AI FEEDBACK & ANALYSIS ---")[-1]
+    display_text = st.session_state["last_res"].split("--- FEEDBACK ---")[-1]
     st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>""", unsafe_allow_html=True)
