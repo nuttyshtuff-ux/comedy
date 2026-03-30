@@ -4,22 +4,30 @@ from google import genai
 
 st.set_page_config(page_title="Comedy Simulator", page_icon="🎙️", layout="wide")
 
-# 1. CSS - Navy & Yellow + Marquee Title + Sidebar Recovery
+# 1. CSS - Navy & Yellow + Sidebar Recovery Fix
 st.markdown("""<style>
-    /* 1a. KILL THE BRANDING BUT SAVE THE SIDEBAR */
+    /* 1a. THE SURGICAL HIDE - Keeps the sidebar button but kills the icons */
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
-    header {visibility: hidden !important;}
     
-    /* This targets the 'Crown/Avatar' toolbar specifically without shifting the page */
+    /* Instead of 'display: none', we make the header invisible so the sidebar button still works */
+    header {
+        visibility: hidden !important;
+        background: rgba(0,0,0,0) !important;
+    }
+
+    /* Specifically target the 'Crown/Avatar' to make them unclickable and invisible */
     .stAppToolbar {
         visibility: hidden !important;
-        display: none !important;
+        pointer-events: none !important;
     }
-    
-    /* Ensures the sidebar button stays visible and clickable */
-    [data-testid="stSidebarNav"] {padding-top: 2rem;}
-    
+
+    /* FORCE the sidebar toggle to be visible again */
+    [data-testid="stHeader"] button {
+        visibility: visible !important;
+        color: #1e3a8a !important; /* Makes the arrow Navy so you can see it */
+    }
+
     /* 1b. YOUR ORIGINAL STYLING */
     .main-title { 
         color: #1e3a8a; font-weight: 800; text-align: center; 
@@ -106,4 +114,4 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 # 6. DISPLAY
 if "last_res" in st.session_state:
     display_text = st.session_state["last_res"].split("--- FEEDBACK ---")[-1]
-    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>", unsafe_allow_html=True)h
