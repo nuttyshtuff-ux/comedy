@@ -24,11 +24,15 @@ st.markdown("""<style>
     }
     .response-card { background-color: #eff6ff; border-left: 8px solid #facc15; padding: 20px; border-radius: 10px; color: #1e3a8a; }
 
-    /* CLEAN APP UI - Hides Streamlit branding for PWA look */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
+    /* THE FINAL KILL-SWITCH FOR BRANDING & FOOTERS */
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    header {visibility: hidden !important;}
+    [data-testid="stHeader"] {background: rgba(0,0,0,0) !important;}
+    [data-testid="stFooter"] {display: none !important;}
+    .stAppToolbar {visibility: hidden !important; display: none !important;}
+    .stAppDeployButton {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
 </style>""", unsafe_allow_html=True)
 
 # 2. DATA
@@ -83,7 +87,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # SURGICAL FIX: The Download Button now pulls the full session state
     if "last_res" in st.session_state:
         st.download_button("💾 DOWNLOAD SET", st.session_state["last_res"], "set.txt", use_container_width=True)
     else:
@@ -100,7 +103,6 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         v_map = {1:"Hostile", 2:"Tough", 3:"Skeptical", 4:"Stiff", 5:"Normal", 6:"Warm", 7:"Friendly", 8:"Loving", 9:"On Fire", 10:"Legendary"}
         fb = bit if bit.strip() != "" else "Suggest new premises."
         
-        # 5a. PROMPT CONSTRUCTION
         p = f"Act as the audience. Venue: {sel_v}. City: {city}. Audience: {sel_a}. Ages: {sel_ag}. Rules: {v_map[v_score]}. Bit: {fb}. "
         p += "Provide a detailed 2-paragraph audience reaction. "
         
@@ -120,11 +122,8 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
             try:
                 with st.spinner("Analyzing Room..."):
                     res = client.models.generate_content(model=m_name, contents=p, config=cfg)
-                    
-                    # SURGICAL FIX: Bundle the original bit WITH the AI response
                     full_save_text = f"--- YOUR BIT ---\n\n{bit}\n\n"
                     full_save_text += f"--- AI FEEDBACK & ANALYSIS ---\n\n{res.text}"
-                    
                     st.session_state["last_res"] = full_save_text
                     st.rerun()
             except Exception:
@@ -134,6 +133,5 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
 
 # 6. DISPLAY
 if "last_res" in st.session_state:
-    # We display only the AI part in the UI card to keep it clean, but the download button has the whole set
     display_text = st.session_state["last_res"].split("--- AI FEEDBACK & ANALYSIS ---")[-1]
     st.markdown(f"""<div class='response-card'><h3>🎭 The Crowd Reacts:</h3>{display_text}</div>""", unsafe_allow_html=True)
