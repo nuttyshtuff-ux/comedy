@@ -23,6 +23,12 @@ st.markdown("""<style>
         filter: invert(86%) sepia(87%) saturate(356%) hue-rotate(352deg) brightness(102%) contrast(104%) !important;
     }
     .response-card { background-color: #eff6ff; border-left: 8px solid #facc15; padding: 20px; border-radius: 10px; color: #1e3a8a; }
+
+    /* CLEAN APP UI - Hides Streamlit branding for PWA look */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
 </style>""", unsafe_allow_html=True)
 
 # 2. DATA
