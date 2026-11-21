@@ -112,7 +112,7 @@ if st.button("🚀 RUN SIMULATION", use_container_width=True):
         if ch: p += " COACHING: structural tips. "
         if ex: p += " EXTENSION: 3 mins new material. "
             
-        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=2000)
+        cfg = types.GenerateContentConfig(temperature=(0.1 if lk else 0.7), top_p=0.95, max_output_tokens=4096)
         m_list = ["gemini-3.1-flash", "gemini-2.5-flash", "gemini-2.0-flash-001"]
         
         for m_name in m_list:
